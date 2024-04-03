@@ -8,17 +8,13 @@ import org.springframework.stereotype.Component;
  * <p/>
  * Use <tt>@Component</tt> to make Camel auto detect this route when starting.
  */
-@Component
-public class MySpringBootRouter extends RouteBuilder {
 
+@Component
+public class BotManager extends RouteBuilder {
     @Override
     public void configure() {
-        from("timer:hello?period={{timer.period}}").routeId("hello")
-            .transform().method("myBean", "saySomething")
-            .filter(simple("${body} contains 'foo'"))
-                .to("log:foo")
-            .end()
-            .to("stream:out");
+        from("telegram:bots?authorizationToken=6732521374:AAF8ogVAEVqmO70PmukFwQqccqRFeCWdEU4")
+                .to("log:INFO?showHeaders=true");
     }
 
 }
