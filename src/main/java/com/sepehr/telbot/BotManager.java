@@ -1,20 +1,28 @@
 package com.sepehr.telbot;
 
 import org.apache.camel.builder.RouteBuilder;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
-/**
- * A simple Camel route that triggers from a timer and calls a bean and prints to system out.
- * <p/>
- * Use <tt>@Component</tt> to make Camel auto detect this route when starting.
- */
 
 @Component
 public class BotManager extends RouteBuilder {
+
+    @Value("${camel.telegram.proxy.enable}")
+    private boolean telegramProxyEnable;
+
+    @Value("${camel.telegram.proxy.config}")
+    private String telegramProxyConfig;
+
     @Override
     public void configure() {
-        from("telegram:bots?authorizationToken=6732521374:AAF8ogVAEVqmO70PmukFwQqccqRFeCWdEU4")
-                .to("log:INFO?showHeaders=true");
+        final String telegramUri = "telegram:bots" + (telegramProxyEnable ? telegramProxyConfig : "");
+        from(telegramUri)
+                .choice()
+                .when(exchange -> exchange.getMessage().getHeaders().isEmpty()).to("direct:buttons")
+                .when(body().isEqualTo("/start")).to("direct:start")
+                .when(body().isEqualTo("/help")).to("direct:help").endChoice().end()
+                .to(telegramUri);
     }
 
 }
