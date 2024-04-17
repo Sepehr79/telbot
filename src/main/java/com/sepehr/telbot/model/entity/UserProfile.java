@@ -1,20 +1,24 @@
 package com.sepehr.telbot.model.entity;
 
-import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.redis.core.RedisHash;
 
-@RedisHash("UserProfile")
+import java.util.List;
+
+@RedisHash(value = "UserProfile", timeToLive = 60 * 10)
 @Data
-@AllArgsConstructor
+@Builder
 public class UserProfile {
 
     @Id
     private String id;
 
-    private String chatId;
+    private UserState userState;
 
     private String txId;
+
+    private List<GptMessage> gptMessages;
 
 }

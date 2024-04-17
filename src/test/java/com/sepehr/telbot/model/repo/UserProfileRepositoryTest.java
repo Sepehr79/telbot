@@ -22,7 +22,7 @@ class UserProfileRepositoryTest {
 
         Optional<UserProfile> byId = userProfileRepository.findById("1");
         Assertions.assertTrue(byId.isPresent());
-        Assertions.assertEquals("1351", byId.get().getChatId());
+        Assertions.assertEquals("1351", byId.get().getId());
     }
 
 }

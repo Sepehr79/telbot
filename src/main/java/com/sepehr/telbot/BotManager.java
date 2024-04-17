@@ -1,28 +1,52 @@
 package com.sepehr.telbot;
 
+import com.sepehr.telbot.config.ApplicationConfiguration;
+import com.sepehr.telbot.model.entity.UserProfile;
+import com.sepehr.telbot.model.entity.UserState;
+import com.sepehr.telbot.model.repo.UserProfileRepository;
+import lombok.RequiredArgsConstructor;
 import org.apache.camel.builder.RouteBuilder;
-import org.springframework.beans.factory.annotation.Value;
+import org.apache.camel.component.telegram.TelegramConstants;
 import org.springframework.stereotype.Component;
+
+import java.util.ArrayList;
+import java.util.Optional;
 
 
 @Component
+@RequiredArgsConstructor
 public class BotManager extends RouteBuilder {
 
-    @Value("${camel.telegram.proxy.enable}")
-    private boolean telegramProxyEnable;
+    private final ApplicationConfiguration applicationConfiguration;
 
-    @Value("${camel.telegram.proxy.config}")
-    private String telegramProxyConfig;
+    private final UserProfileRepository userProfileRepository;
 
     @Override
     public void configure() {
-        final String telegramUri = "telegram:bots" + (telegramProxyEnable ? telegramProxyConfig : "");
-        from(telegramUri)
-                .choice()
-                .when(exchange -> exchange.getMessage().getHeaders().isEmpty()).to("direct:buttons")
-                .when(body().isEqualTo("/start")).to("direct:start")
-                .when(body().isEqualTo("/help")).to("direct:help").endChoice().end()
-                .to(telegramUri);
+        from(applicationConfiguration.getTelegramUri())
+                .process(exchange -> {
+                    exchange.getMessage().setHeader(TelegramConstants.TELEGRAM_PARSE_MODE, "MARKDOWN");
+                    final String body = exchange.getMessage().getBody(String.class);
+                    final String chatId = exchange.getMessage().getHeader(ApplicationConfiguration.TELEGRAM_CHAT_ID, String.class);
+
+                    final Optional<UserProfile> byId = userProfileRepository.findById(chatId);
+                    final UserProfile userProfile = byId.orElseGet(() -> UserProfile.builder().id(chatId)
+                            .userState(UserState.START).build());
+                    if (body.matches("/(start|contact|chat)")) {
+                        userProfile.setUserState(UserState.valueOf(body.substring(1).toUpperCase()));
+                    }
+                    userProfileRepository.save(userProfile);
+                    exchange.getMessage().setHeader("UserProfile", userProfile);
+                    exchange.getMessage().setHeader("route", userProfile.getUserState().toString().toLowerCase());
+                })
+                .toD("direct:${header.route}")
+                .process(exchange -> {
+                    UserProfile userProfile = exchange.getMessage().getHeader("UserProfile", UserProfile.class);
+                    exchange.getMessage().setHeader(TelegramConstants.TELEGRAM_CHAT_ID, userProfile.getId());
+                })
+                .to("log:telegramFinalResult?showHeaders=true")
+                .to(applicationConfiguration.getTelegramUri());
+
     }
 
 }
