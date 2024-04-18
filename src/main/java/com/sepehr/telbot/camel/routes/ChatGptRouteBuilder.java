@@ -10,11 +10,15 @@ import lombok.RequiredArgsConstructor;
 import org.apache.camel.Exchange;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.telegram.TelegramConstants;
+import org.apache.camel.component.telegram.model.InlineKeyboardButton;
+import org.apache.camel.component.telegram.model.InlineKeyboardMarkup;
+import org.apache.camel.component.telegram.model.OutgoingTextMessage;
 import org.apache.camel.model.dataformat.JsonLibrary;
 import org.apache.camel.spi.HeaderFilterStrategy;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
+import java.util.List;
 
 @Component
 @RequiredArgsConstructor
@@ -34,9 +38,18 @@ public class ChatGptRouteBuilder extends RouteBuilder {
                 .when(exchange -> {
                     final String body = exchange.getMessage().getBody(String.class);
                     return body.equals("/chat");
-                }).process(exchange -> exchange.getMessage().setBody("شما اکنون با ربات صحبت میکنید.\n" +
-                        "/start  منو اصلی\n" +
-                        "/contact  پیام ناشناس به توسعه دهنده"))
+                }).process(exchange -> {
+                    final OutgoingTextMessage outgoingTextMessage = new OutgoingTextMessage();
+                    outgoingTextMessage.setText("شما اکنون با ربات صحبت میکنید");
+
+                    InlineKeyboardMarkup inlineKeyboardMarkup = InlineKeyboardMarkup.builder()
+                            .addRow(List.of(InlineKeyboardButton.builder().text("منو اصلی").callbackData("/start").build()))
+                            .addRow(List.of(InlineKeyboardButton.builder().text("پیام ناشناس به توسعه دهنده").callbackData("/contact").build()))
+                            .build();
+
+                    outgoingTextMessage.setReplyMarkup(inlineKeyboardMarkup);
+                    exchange.getMessage().setBody(outgoingTextMessage);
+                })
                 .otherwise()
                 .setHeader(Exchange.CONTENT_TYPE, constant("application/json"))
                 .setHeader("Authorization", constant(applicationConfiguration.getOpenaiKey()))

@@ -18,8 +18,6 @@ public class ApplicationConfiguration {
     @Value("${openai.apikey}")
     private String openaiKey;
 
-    public static final String TELEGRAM_CHAT_ID = "CamelTelegramChatId";
-
     public String getTelegramUri() {
         return "telegram:bots" + (telegramProxyEnable ? telegramProxyConfig : "");
     }

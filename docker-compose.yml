@@ -1,0 +1,14 @@
+version: '3'
+services:
+  redis:
+    image: 'redis'
+    volumes:
+      - redis_data:/data
+  telbot:
+    image: sepehr79m/telbot
+    environment:
+      SPRING_REDIS_HOST: redis
+
+volumes:
+  redis_data:
+    external: false
