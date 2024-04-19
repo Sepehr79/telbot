@@ -15,7 +15,7 @@ public class MenuRouteBuilder extends RouteBuilder {
         from("direct:start")
                 .process(exchange -> {
                     final OutgoingTextMessage textMessage = new OutgoingTextMessage();
-                    textMessage.setText("سلام. این ربات بهت کمک میکنه که مستقیم با ChatGPT صحبت کنی.");
+                    textMessage.setText("سلام\n این ربات بهت کمک میکنه که مستقیم با ChatGPT صحبت کنی");
 
                     final InlineKeyboardMarkup replyKeyboardMarkup =
                             InlineKeyboardMarkup.builder()
