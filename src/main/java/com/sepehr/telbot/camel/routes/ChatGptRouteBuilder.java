@@ -8,9 +8,11 @@ import com.sepehr.telbot.model.entity.UserProfile;
 import com.sepehr.telbot.model.repo.UserProfileRepository;
 import lombok.RequiredArgsConstructor;
 import org.apache.camel.Exchange;
+import org.apache.camel.component.telegram.TelegramConstants;
 import org.apache.camel.component.telegram.model.InlineKeyboardButton;
 import org.apache.camel.component.telegram.model.InlineKeyboardMarkup;
 import org.apache.camel.component.telegram.model.OutgoingMessage;
+import org.apache.camel.component.telegram.model.OutgoingTextMessage;
 import org.apache.camel.model.dataformat.JsonLibrary;
 import org.springframework.stereotype.Component;
 
@@ -40,7 +42,7 @@ public class ChatGptRouteBuilder extends AbstractRouteBuilder {
                             .addRow(List.of(InlineKeyboardButton.builder().text("منو اصلی").callbackData("/start").build()))
                             .addRow(List.of(InlineKeyboardButton.builder().text("پیام ناشناس به توسعه دهنده").callbackData("/contact").build()))
                             .build();
-                    final OutgoingMessage outgoingMessage = getOutGoingMessageBuilder(
+                    final OutgoingMessage outgoingMessage = getOutGoingTextMessageBuilder(
                             exchange,
                             "شما اکنون با ربات صحبت میکنید",
                             inlineKeyboardMarkup
@@ -71,13 +73,19 @@ public class ChatGptRouteBuilder extends AbstractRouteBuilder {
                 .process(exchange -> {
                     JsonNode bodyResult = exchange.getMessage().getBody(JsonNode.class);
                     final String body = bodyResult.get("choices").get(0).get("message").get("content").asText();
-
+                    final Integer messageId = exchange.getMessage().getHeader(ApplicationConfiguration.MESSAGE_ID, Integer.class);
                     final UserProfile userProfile = exchange.getMessage().getHeader("UserProfile", UserProfile.class);
+                    final String parseMode = exchange.getMessage().getHeader(TelegramConstants.TELEGRAM_PARSE_MODE, String.class);
                     userProfile.getGptMessages().add(gptRequestBuilder.createAssistantMessage(body));
 
+                    final OutgoingTextMessage outMessage = OutgoingTextMessage.builder()
+                            .text(body)
+                            .build();
+                    outMessage.setReplyToMessageId(messageId.longValue());
+                    outMessage.setParseMode(parseMode);
                     userProfileRepository.save(userProfile);
 
-                    exchange.getMessage().setBody(body);
+                    exchange.getMessage().setBody(outMessage);
                 })
                 .endChoice().end()
                 ;

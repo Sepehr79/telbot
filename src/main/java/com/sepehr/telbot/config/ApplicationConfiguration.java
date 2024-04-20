@@ -20,6 +20,10 @@ public class ApplicationConfiguration {
 
     public static String MESSAGE_ID = "MessageId";
 
+    public static String ROUTE_SELECT = "route";
+
+    public static String BUTTON_RESPONSE = "buttonResponse";
+
     public String getTelegramUri() {
         return "telegram:bots" + (telegramProxyEnable ? telegramProxyConfig : "");
     }

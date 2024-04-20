@@ -1,10 +1,10 @@
 package com.sepehr.telbot;
 
-import com.sepehr.telbot.camel.process.CommandProcessor;
 import com.sepehr.telbot.camel.process.TelegramMessagePreProcessor;
 import com.sepehr.telbot.camel.process.TextMessageProcessor;
+import com.sepehr.telbot.camel.process.command.GroupCommandProcessor;
+import com.sepehr.telbot.camel.process.command.UserCommandProcessor;
 import com.sepehr.telbot.config.ApplicationConfiguration;
-import com.sepehr.telbot.model.entity.UserProfile;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.camel.builder.RouteBuilder;
@@ -22,7 +22,9 @@ public class BotManager extends RouteBuilder {
 
     private final TelegramMessagePreProcessor telegramMessagePreProcessor;
 
-    private final CommandProcessor commandProcessor;
+    private final UserCommandProcessor userCommandProcessor;
+
+    private final GroupCommandProcessor groupCommandProcessor;
 
     private final TextMessageProcessor textMessageProcessor;
 
@@ -35,21 +37,23 @@ public class BotManager extends RouteBuilder {
                 .to("log:in?showHeaders=true")
                 .process(telegramMessagePreProcessor).id(TelegramMessagePreProcessor.class.getSimpleName())
                 .choice()
+                .when(exchange -> exchange.getMessage().getHeader(TelegramConstants.TELEGRAM_CHAT_ID, String.class).startsWith("-"))
+                    .process(groupCommandProcessor).id(GroupCommandProcessor.class.getSimpleName())
                 .when(exchange -> exchange.getMessage().getBody(String.class).startsWith("/"))
-                    .process(commandProcessor).id(CommandProcessor.class.getSimpleName())
+                    .process(userCommandProcessor).id(UserCommandProcessor.class.getSimpleName())
                 .otherwise()
                     .process(textMessageProcessor).id(TextMessageProcessor.class.getSimpleName())
                 .end()
-                .toD("direct:${header.route}")
-                .process(exchange -> {
-                    UserProfile userProfile = exchange.getMessage().getHeader("UserProfile", UserProfile.class);
-                    exchange.getMessage().setHeader(TelegramConstants.TELEGRAM_CHAT_ID, userProfile.getId());
-                })
+                .toD("direct:${header.route}", true)
                 .to("log:telegramFinalResult?showHeaders=true")
                 .to(applicationConfiguration.getTelegramUri());
 
         from("direct:version")
                 .transform(constant(appVersion));
+
+        from("direct:ignore")
+                .to("log:ignoreMessage")
+                .stop();
 
     }
 

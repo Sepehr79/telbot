@@ -1,5 +1,6 @@
-package com.sepehr.telbot.camel.process;
+package com.sepehr.telbot.camel.process.command;
 
+import com.sepehr.telbot.config.ApplicationConfiguration;
 import com.sepehr.telbot.model.entity.UserProfile;
 import com.sepehr.telbot.model.entity.UserState;
 import com.sepehr.telbot.model.repo.UserProfileRepository;
@@ -11,13 +12,13 @@ import org.springframework.stereotype.Component;
 
 @Component
 @RequiredArgsConstructor
-public class CommandProcessor implements Processor {
+public class UserCommandProcessor implements Processor {
 
     private final UserProfileRepository userProfileRepository;
 
     @Override
     public void process(Exchange exchange) {
-        final String body = exchange.getMessage().getBody(String.class);
+        String body = exchange.getMessage().getBody(String.class);
         final String chatId = exchange.getMessage().getHeader(TelegramConstants.TELEGRAM_CHAT_ID, String.class);
 
         UserState userState;
@@ -33,6 +34,7 @@ public class CommandProcessor implements Processor {
 
         userProfileRepository.save(userProfile);
         exchange.getMessage().setHeader("UserProfile", userProfile);
-        exchange.getMessage().setHeader("route", userProfile.getUserState().toString().toLowerCase());
+        exchange.getMessage().setHeader(ApplicationConfiguration.ROUTE_SELECT, userProfile.getUserState().toString().toLowerCase());
+        exchange.getMessage().setBody(body);
     }
 }
