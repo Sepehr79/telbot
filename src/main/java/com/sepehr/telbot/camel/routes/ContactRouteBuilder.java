@@ -1,6 +1,7 @@
 package com.sepehr.telbot.camel.routes;
 
 import com.sepehr.telbot.config.ApplicationConfiguration;
+import com.sepehr.telbot.model.entity.UserProfile;
 import lombok.RequiredArgsConstructor;
 import org.apache.camel.component.telegram.TelegramConstants;
 import org.apache.camel.component.telegram.model.InlineKeyboardButton;
@@ -33,7 +34,9 @@ public class ContactRouteBuilder extends AbstractRouteBuilder {
                             .addRow(List.of(InlineKeyboardButton.builder().text("مشاهده منو").callbackData("/start").build()))
                             .addRow(List.of(InlineKeyboardButton.builder().text("چت با ربات").callbackData("/chat").build()))
                             .build();
-                    final var outgoingMessage = getOutGoingMessageBuilder(exchange, "پیام شما ارسال شد", inlineKeyboardMarkup);
+                    final UserProfile userProfile = exchange.getMessage().getHeader("UserProfile", UserProfile.class);
+                    final var outgoingMessage = getOutGoingTextMessageBuilder(exchange, "پیام شما ارسال شد", inlineKeyboardMarkup);
+                    exchange.getMessage().setHeader(TelegramConstants.TELEGRAM_CHAT_ID, userProfile.getId());
                     exchange.getMessage().setBody(outgoingMessage);
                 })
                 .endChoice().end();

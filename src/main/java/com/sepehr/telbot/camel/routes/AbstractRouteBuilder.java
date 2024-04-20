@@ -10,19 +10,21 @@ import org.apache.camel.component.telegram.model.OutgoingTextMessage;
 
 public abstract class AbstractRouteBuilder extends RouteBuilder {
 
-    public OutgoingMessage getOutGoingMessageBuilder(final Exchange exchange, final String text, final InlineKeyboardMarkup replyMarkup) {
+    public OutgoingMessage getOutGoingTextMessageBuilder(final Exchange exchange, final String text, final InlineKeyboardMarkup replyMarkup) {
+        final boolean buttonResponse = exchange.getMessage().getHeader(ApplicationConfiguration.BUTTON_RESPONSE, Boolean.class);
         final Integer messageId = exchange.getMessage().getHeader(ApplicationConfiguration.MESSAGE_ID, Integer.class);
-        if (messageId == 0) {
-            return OutgoingTextMessage.builder()
+        if (buttonResponse) {
+            return EditMessageTextMessage.builder()
                     .text(text)
                     .replyMarkup(replyMarkup)
+                    .messageId(messageId)
                     .build();
         }
-        return EditMessageTextMessage.builder()
+        return OutgoingTextMessage.builder()
                 .text(text)
                 .replyMarkup(replyMarkup)
-                .messageId(messageId)
                 .build();
+
     }
 
 }

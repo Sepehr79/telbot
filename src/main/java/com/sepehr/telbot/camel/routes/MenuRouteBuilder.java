@@ -18,7 +18,8 @@ public class MenuRouteBuilder extends AbstractRouteBuilder {
                                     .addRow(List.of(InlineKeyboardButton.builder().text("صحبت با ربات").callbackData("/chat").build()))
                                     .addRow(List.of(InlineKeyboardButton.builder().text("پیام ناشناس به توسعه دهنده").callbackData("/contact").build()))
                                     .build();
-                    final OutgoingMessage outgoingMessage = getOutGoingMessageBuilder(exchange, "سلام\n این ربات بهت کمک میکنه که مستقیم با ChatGPT صحبت کنی", replyKeyboardMarkup);
+                    final OutgoingMessage outgoingMessage = getOutGoingTextMessageBuilder(exchange, "این ربات بهت کمک میکنه که از طریق تلگرام با ChatGPT صحبت کنی! \n\n " +
+                            "آخرین تغییرات: امکان اضافه کردن ربات به گروه ها \n\nدر این صورت برای صدا کردن ربات کافیه اول پیامتون // قرار بدید", replyKeyboardMarkup);
 
                     exchange.getMessage().setBody(outgoingMessage);
                 });
