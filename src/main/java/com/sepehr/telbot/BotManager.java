@@ -5,15 +5,12 @@ import com.sepehr.telbot.camel.process.TelegramMessagePreProcessor;
 import com.sepehr.telbot.camel.process.TextMessageProcessor;
 import com.sepehr.telbot.config.ApplicationConfiguration;
 import com.sepehr.telbot.model.entity.UserProfile;
-import com.sepehr.telbot.model.entity.UserState;
-import com.sepehr.telbot.model.repo.UserProfileRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.telegram.TelegramConstants;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
-
-import java.util.Optional;
 
 
 @Component
@@ -29,6 +26,9 @@ public class BotManager extends RouteBuilder {
 
     private final TextMessageProcessor textMessageProcessor;
 
+    @Value("${app.version}")
+    private String appVersion;
+
     @Override
     public void configure() {
         from(applicationConfiguration.getTelegramUri())
@@ -36,13 +36,10 @@ public class BotManager extends RouteBuilder {
                 .process(telegramMessagePreProcessor).id(TelegramMessagePreProcessor.class.getSimpleName())
                 .choice()
                 .when(exchange -> exchange.getMessage().getBody(String.class).startsWith("/"))
-                    .process(commandProcessor)
+                    .process(commandProcessor).id(CommandProcessor.class.getSimpleName())
                 .otherwise()
-                    .process(textMessageProcessor)
+                    .process(textMessageProcessor).id(TextMessageProcessor.class.getSimpleName())
                 .end()
-                .choice()
-                .when(exchange -> exchange.getMessage().getHeaders().containsKey("DeleteMessage"))
-                    .to("seda:deleteMessage").end()
                 .toD("direct:${header.route}")
                 .process(exchange -> {
                     UserProfile userProfile = exchange.getMessage().getHeader("UserProfile", UserProfile.class);
@@ -50,6 +47,9 @@ public class BotManager extends RouteBuilder {
                 })
                 .to("log:telegramFinalResult?showHeaders=true")
                 .to(applicationConfiguration.getTelegramUri());
+
+        from("direct:version")
+                .transform(constant(appVersion));
 
     }
 

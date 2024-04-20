@@ -8,13 +8,10 @@ import com.sepehr.telbot.model.entity.UserProfile;
 import com.sepehr.telbot.model.repo.UserProfileRepository;
 import lombok.RequiredArgsConstructor;
 import org.apache.camel.Exchange;
-import org.apache.camel.builder.RouteBuilder;
-import org.apache.camel.component.telegram.TelegramConstants;
 import org.apache.camel.component.telegram.model.InlineKeyboardButton;
 import org.apache.camel.component.telegram.model.InlineKeyboardMarkup;
-import org.apache.camel.component.telegram.model.OutgoingTextMessage;
+import org.apache.camel.component.telegram.model.OutgoingMessage;
 import org.apache.camel.model.dataformat.JsonLibrary;
-import org.apache.camel.spi.HeaderFilterStrategy;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -22,7 +19,7 @@ import java.util.List;
 
 @Component
 @RequiredArgsConstructor
-public class ChatGptRouteBuilder extends RouteBuilder {
+public class ChatGptRouteBuilder extends AbstractRouteBuilder {
 
     private final ApplicationConfiguration applicationConfiguration;
 
@@ -39,16 +36,17 @@ public class ChatGptRouteBuilder extends RouteBuilder {
                     final String body = exchange.getMessage().getBody(String.class);
                     return body.equals("/chat");
                 }).process(exchange -> {
-                    final OutgoingTextMessage outgoingTextMessage = new OutgoingTextMessage();
-                    outgoingTextMessage.setText("شما اکنون با ربات صحبت میکنید");
-
-                    InlineKeyboardMarkup inlineKeyboardMarkup = InlineKeyboardMarkup.builder()
+                    final InlineKeyboardMarkup inlineKeyboardMarkup = InlineKeyboardMarkup.builder()
                             .addRow(List.of(InlineKeyboardButton.builder().text("منو اصلی").callbackData("/start").build()))
                             .addRow(List.of(InlineKeyboardButton.builder().text("پیام ناشناس به توسعه دهنده").callbackData("/contact").build()))
                             .build();
+                    final OutgoingMessage outgoingMessage = getOutGoingMessageBuilder(
+                            exchange,
+                            "شما اکنون با ربات صحبت میکنید",
+                            inlineKeyboardMarkup
+                    );
 
-                    outgoingTextMessage.setReplyMarkup(inlineKeyboardMarkup);
-                    exchange.getMessage().setBody(outgoingTextMessage);
+                    exchange.getMessage().setBody(outgoingMessage);
                 })
                 .otherwise()
                 .setHeader(Exchange.CONTENT_TYPE, constant("application/json"))

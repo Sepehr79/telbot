@@ -9,7 +9,8 @@ public enum UserState {
 
     START,
     CONTACT,
-    CHAT
+    CHAT,
+    VERSION
     ;
 
 
