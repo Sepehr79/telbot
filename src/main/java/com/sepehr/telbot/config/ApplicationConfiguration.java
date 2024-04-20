@@ -18,6 +18,8 @@ public class ApplicationConfiguration {
     @Value("${openai.apikey}")
     private String openaiKey;
 
+    public static String MESSAGE_ID = "MessageId";
+
     public String getTelegramUri() {
         return "telegram:bots" + (telegramProxyEnable ? telegramProxyConfig : "");
     }
