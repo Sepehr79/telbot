@@ -1,10 +1,10 @@
 package com.sepehr.telbot;
 
 import com.sepehr.telbot.camel.process.TelegramMessagePreProcessor;
-import com.sepehr.telbot.camel.process.TextMessageProcessor;
 import com.sepehr.telbot.camel.process.command.GroupCommandProcessor;
 import com.sepehr.telbot.camel.process.command.UserCommandProcessor;
 import com.sepehr.telbot.config.ApplicationConfiguration;
+import com.sepehr.telbot.model.entity.Command;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.camel.builder.RouteBuilder;
@@ -26,8 +26,6 @@ public class BotManager extends RouteBuilder {
 
     private final GroupCommandProcessor groupCommandProcessor;
 
-    private final TextMessageProcessor textMessageProcessor;
-
     @Value("${app.version}")
     private String appVersion;
 
@@ -42,7 +40,7 @@ public class BotManager extends RouteBuilder {
                 .when(exchange -> exchange.getMessage().getBody(String.class).startsWith("/"))
                     .process(userCommandProcessor).id(UserCommandProcessor.class.getSimpleName())
                 .otherwise()
-                    .process(textMessageProcessor).id(TextMessageProcessor.class.getSimpleName())
+                    .setHeader(ApplicationConfiguration.ROUTE_SELECT, () -> Command.CHAT.toString().toLowerCase())
                 .end()
                 .toD("direct:${header.route}", true)
                 .to("log:telegramFinalResult?showHeaders=true")

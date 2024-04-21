@@ -24,6 +24,8 @@ public class ApplicationConfiguration {
 
     public static String BUTTON_RESPONSE = "buttonResponse";
 
+    public static String USER_PROFILE = "userProfile";
+
     public String getTelegramUri() {
         return "telegram:bots" + (telegramProxyEnable ? telegramProxyConfig : "");
     }
