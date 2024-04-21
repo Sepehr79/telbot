@@ -18,7 +18,7 @@ public class ApplicationConfiguration {
     @Value("${openai.apikey}")
     private String openaiKey;
 
-    public static String MESSAGE_ID = "MessageId";
+    public static String REPLY_MESSAGE_ID = "MessageId";
 
     public static String ROUTE_SELECT = "route";
 

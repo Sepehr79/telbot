@@ -2,9 +2,7 @@ package com.sepehr.telbot;
 
 import com.sepehr.telbot.camel.process.TelegramMessagePreProcessor;
 import com.sepehr.telbot.camel.process.command.GroupCommandProcessor;
-import com.sepehr.telbot.camel.process.command.UserCommandProcessor;
 import com.sepehr.telbot.config.ApplicationConfiguration;
-import com.sepehr.telbot.model.entity.Command;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.camel.builder.RouteBuilder;
@@ -22,8 +20,6 @@ public class BotManager extends RouteBuilder {
 
     private final TelegramMessagePreProcessor telegramMessagePreProcessor;
 
-    private final UserCommandProcessor userCommandProcessor;
-
     private final GroupCommandProcessor groupCommandProcessor;
 
     @Value("${app.version}")
@@ -37,10 +33,6 @@ public class BotManager extends RouteBuilder {
                 .choice()
                 .when(exchange -> exchange.getMessage().getHeader(TelegramConstants.TELEGRAM_CHAT_ID, String.class).startsWith("-"))
                     .process(groupCommandProcessor).id(GroupCommandProcessor.class.getSimpleName())
-                .when(exchange -> exchange.getMessage().getBody(String.class).startsWith("/"))
-                    .process(userCommandProcessor).id(UserCommandProcessor.class.getSimpleName())
-                .otherwise()
-                    .setHeader(ApplicationConfiguration.ROUTE_SELECT, () -> Command.CHAT.toString().toLowerCase())
                 .end()
                 .toD("direct:${header.route}", true)
                 .to("log:telegramFinalResult?showHeaders=true")
