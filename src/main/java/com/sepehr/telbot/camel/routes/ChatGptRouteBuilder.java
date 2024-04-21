@@ -6,12 +6,10 @@ import com.sepehr.telbot.model.entity.GptMessage;
 import com.sepehr.telbot.model.entity.GptRequestBuilder;
 import com.sepehr.telbot.model.entity.UserProfile;
 import com.sepehr.telbot.model.repo.UserProfileRepository;
-import com.sepehr.telbot.view.UpdateUserTyping;
 import lombok.RequiredArgsConstructor;
 import org.apache.camel.Exchange;
 import org.apache.camel.component.telegram.TelegramConstants;
 import org.apache.camel.component.telegram.model.OutgoingTextMessage;
-import org.apache.camel.component.telegram.model.Update;
 import org.apache.camel.model.dataformat.JsonLibrary;
 import org.springframework.stereotype.Component;
 
