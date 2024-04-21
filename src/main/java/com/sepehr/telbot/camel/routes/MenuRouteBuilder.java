@@ -15,11 +15,11 @@ public class MenuRouteBuilder extends AbstractRouteBuilder {
                 .process(exchange -> {
                     final InlineKeyboardMarkup replyKeyboardMarkup =
                             InlineKeyboardMarkup.builder()
-                                    .addRow(List.of(InlineKeyboardButton.builder().text("صحبت با ربات").callbackData("/chat").build()))
-                                    .addRow(List.of(InlineKeyboardButton.builder().text("پیام ناشناس به توسعه دهنده").callbackData("/contact").build()))
+                                    .addRow(List.of(InlineKeyboardButton.builder().text("حمایت از ما").callbackData("/donate").build()))
                                     .build();
-                    final OutgoingMessage outgoingMessage = getOutGoingTextMessageBuilder(exchange, "این ربات بهت کمک میکنه که از طریق تلگرام با ChatGPT صحبت کنی! \n\n " +
-                            "آخرین تغییرات: امکان اضافه کردن ربات به گروه ها \n\nدر این صورت برای صدا کردن ربات کافیه اول پیامتون // قرار بدید", replyKeyboardMarkup);
+                    final OutgoingMessage outgoingMessage = getOutGoingTextMessageBuilder(exchange, "سلام! این ربات بهت کمک میکنه که از طریق تلگرام با ChatGPT صحبت کنی.\n\n" +
+                            "در حال حاضر برای پاسخ به شما از مدل gpt-3.5-turbo استفاده میشه که میتونین مستقیم از طریق:\n https://chat.openai.com\n بهش دسترسی پیدا کنید.\n\n" +
+                            "قابلیت ها:\n1. سوالات خودتون رو بپرسید تا ربات اونها را به ChatGPT ارسال کنه و پاسخش رو به شما برگردونه.\n2. همچنین میتونین این ربات رو به گروه ها اضافه کنید در این صورت برای اینکه ربات رو صدا کنید کافیه اول پیامتون // قرار بدید.\n\n تلاش میکنیم در آینده امکانات بیشتری به این ربات اضافه کنیم.", replyKeyboardMarkup);
 
                     exchange.getMessage().setBody(outgoingMessage);
                 });

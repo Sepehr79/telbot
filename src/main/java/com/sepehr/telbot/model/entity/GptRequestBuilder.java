@@ -3,13 +3,16 @@ package com.sepehr.telbot.model.entity;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
+import java.util.List;
 
 
 @Component
 public class GptRequestBuilder {
 
     public GptReq createGptReq() {
-        return new GptReq("gpt-3.5-turbo", new ArrayList<>());
+        List<GptMessage> gptMessages = new ArrayList<>();
+        gptMessages.add(new GptMessage("system", "You are a helpful assistant."));
+        return new GptReq("gpt-3.5-turbo", gptMessages);
     }
 
     public GptMessage createAssistantMessage(final String content) {

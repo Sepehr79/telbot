@@ -1,40 +1,28 @@
 package com.sepehr.telbot.camel.process.command;
 
 import com.sepehr.telbot.config.ApplicationConfiguration;
-import com.sepehr.telbot.model.entity.UserProfile;
-import com.sepehr.telbot.model.entity.UserState;
-import com.sepehr.telbot.model.repo.UserProfileRepository;
+import com.sepehr.telbot.model.entity.Command;
 import lombok.RequiredArgsConstructor;
 import org.apache.camel.Exchange;
 import org.apache.camel.Processor;
-import org.apache.camel.component.telegram.TelegramConstants;
 import org.springframework.stereotype.Component;
 
 @Component
 @RequiredArgsConstructor
 public class UserCommandProcessor implements Processor {
 
-    private final UserProfileRepository userProfileRepository;
-
     @Override
     public void process(Exchange exchange) {
         String body = exchange.getMessage().getBody(String.class);
-        final String chatId = exchange.getMessage().getHeader(TelegramConstants.TELEGRAM_CHAT_ID, String.class);
 
-        UserState userState;
+        Command userCommand;
         try {
-            userState = UserState.valueOf(body.substring(1).toUpperCase());
+            userCommand = Command.valueOf(body.substring(1).toUpperCase());
         } catch (IllegalArgumentException illegalArgumentException) {
-            userState = UserState.START;
+            userCommand = Command.START;
         }
-        final UserProfile userProfile = UserProfile.builder()
-                .userState(userState)
-                .id(chatId)
-                .build();
 
-        userProfileRepository.save(userProfile);
-        exchange.getMessage().setHeader("UserProfile", userProfile);
-        exchange.getMessage().setHeader(ApplicationConfiguration.ROUTE_SELECT, userProfile.getUserState().toString().toLowerCase());
+        exchange.getMessage().setHeader(ApplicationConfiguration.ROUTE_SELECT, userCommand.toString().toLowerCase());
         exchange.getMessage().setBody(body);
     }
 }

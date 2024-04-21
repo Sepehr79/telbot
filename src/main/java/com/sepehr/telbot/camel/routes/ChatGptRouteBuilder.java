@@ -2,22 +2,18 @@ package com.sepehr.telbot.camel.routes;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.sepehr.telbot.config.ApplicationConfiguration;
-import com.sepehr.telbot.model.entity.GptReq;
+import com.sepehr.telbot.model.entity.GptMessage;
 import com.sepehr.telbot.model.entity.GptRequestBuilder;
 import com.sepehr.telbot.model.entity.UserProfile;
 import com.sepehr.telbot.model.repo.UserProfileRepository;
+import com.sepehr.telbot.view.UpdateUserTyping;
 import lombok.RequiredArgsConstructor;
 import org.apache.camel.Exchange;
 import org.apache.camel.component.telegram.TelegramConstants;
-import org.apache.camel.component.telegram.model.InlineKeyboardButton;
-import org.apache.camel.component.telegram.model.InlineKeyboardMarkup;
-import org.apache.camel.component.telegram.model.OutgoingMessage;
 import org.apache.camel.component.telegram.model.OutgoingTextMessage;
+import org.apache.camel.component.telegram.model.Update;
 import org.apache.camel.model.dataformat.JsonLibrary;
 import org.springframework.stereotype.Component;
-
-import java.util.ArrayList;
-import java.util.List;
 
 @Component
 @RequiredArgsConstructor
@@ -33,38 +29,19 @@ public class ChatGptRouteBuilder extends AbstractRouteBuilder {
     public void configure() {
 
         from("direct:chat")
-                .choice()
-                .when(exchange -> {
-                    final String body = exchange.getMessage().getBody(String.class);
-                    return body.equals("/chat");
-                }).process(exchange -> {
-                    final InlineKeyboardMarkup inlineKeyboardMarkup = InlineKeyboardMarkup.builder()
-                            .addRow(List.of(InlineKeyboardButton.builder().text("منو اصلی").callbackData("/start").build()))
-                            .addRow(List.of(InlineKeyboardButton.builder().text("پیام ناشناس به توسعه دهنده").callbackData("/contact").build()))
-                            .build();
-                    final OutgoingMessage outgoingMessage = getOutGoingTextMessageBuilder(
-                            exchange,
-                            "شما اکنون با ربات صحبت میکنید",
-                            inlineKeyboardMarkup
-                    );
-
-                    exchange.getMessage().setBody(outgoingMessage);
-                })
-                .otherwise()
                 .setHeader(Exchange.CONTENT_TYPE, constant("application/json"))
                 .setHeader("Authorization", constant(applicationConfiguration.getOpenaiKey()))
                 .process(exchange -> {
                     final String body = exchange.getMessage().getBody(String.class);
-                    final UserProfile userProfile = exchange.getMessage().getHeader("UserProfile", UserProfile.class);
-                    final GptReq gptReq = gptRequestBuilder.createGptReq();
-                    if (userProfile.getGptMessages() != null) {
-                        gptReq.getMessages().addAll(userProfile.getGptMessages());
-                    } else {
-                        userProfile.setGptMessages(new ArrayList<>());
-                    }
-                    gptReq.getMessages().add(gptRequestBuilder.createUserMessage(body));
-                    userProfile.getGptMessages().add(gptRequestBuilder.createUserMessage(body));
-                    exchange.getMessage().setBody(gptReq);
+                    final String chatId = exchange.getMessage().getHeader(TelegramConstants.TELEGRAM_CHAT_ID, String.class);
+                    final UserProfile userProfile = userProfileRepository.findById(chatId).orElseGet(() ->
+                            UserProfile.builder().id(chatId)
+                                    .gptReq(gptRequestBuilder.createGptReq())
+                                    .build());
+                    final GptMessage gptMessage = gptRequestBuilder.createUserMessage(body);
+                    userProfile.getGptReq().getMessages().add(gptMessage);
+                    exchange.getMessage().setHeader(ApplicationConfiguration.USER_PROFILE, userProfile);
+                    exchange.getMessage().setBody(userProfile.getGptReq());
                 })
                 .marshal().json(JsonLibrary.Jackson)
                 .to("log:chatGptFinalResult?showHeaders=true")
@@ -74,21 +51,19 @@ public class ChatGptRouteBuilder extends AbstractRouteBuilder {
                     JsonNode bodyResult = exchange.getMessage().getBody(JsonNode.class);
                     final String body = bodyResult.get("choices").get(0).get("message").get("content").asText();
                     final Integer messageId = exchange.getMessage().getHeader(ApplicationConfiguration.MESSAGE_ID, Integer.class);
-                    final UserProfile userProfile = exchange.getMessage().getHeader("UserProfile", UserProfile.class);
+                    final UserProfile userProfile = exchange.getMessage().getHeader(ApplicationConfiguration.USER_PROFILE, UserProfile.class);
                     final String parseMode = exchange.getMessage().getHeader(TelegramConstants.TELEGRAM_PARSE_MODE, String.class);
-                    userProfile.getGptMessages().add(gptRequestBuilder.createAssistantMessage(body));
+                    userProfile.getGptReq().getMessages().add(gptRequestBuilder.createAssistantMessage(body));
+                    userProfileRepository.save(userProfile);
 
                     final OutgoingTextMessage outMessage = OutgoingTextMessage.builder()
                             .text(body)
                             .build();
                     outMessage.setReplyToMessageId(messageId.longValue());
                     outMessage.setParseMode(parseMode);
-                    userProfileRepository.save(userProfile);
 
                     exchange.getMessage().setBody(outMessage);
-                })
-                .endChoice().end()
-                ;
+                });
 
     }
 }

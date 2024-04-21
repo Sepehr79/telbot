@@ -5,10 +5,10 @@ import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
 @Getter
-public enum UserState {
+public enum Command {
 
     START,
-    CONTACT,
+    DONATE,
     CHAT,
     VERSION
     ;
