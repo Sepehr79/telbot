@@ -1,5 +1,6 @@
 package com.sepehr.telbot;
 
+import com.sepehr.telbot.camel.process.RouteSelectProcessor;
 import com.sepehr.telbot.camel.process.TelegramMessagePreProcessor;
 import com.sepehr.telbot.camel.process.command.GroupCommandProcessor;
 import com.sepehr.telbot.config.ApplicationConfiguration;
@@ -22,6 +23,8 @@ public class BotManager extends RouteBuilder {
 
     private final GroupCommandProcessor groupCommandProcessor;
 
+    private final RouteSelectProcessor routeSelectProcessor;
+
     @Value("${app.version}")
     private String appVersion;
 
@@ -30,6 +33,7 @@ public class BotManager extends RouteBuilder {
         from(applicationConfiguration.getTelegramUri())
                 .to("log:in?showHeaders=true")
                 .process(telegramMessagePreProcessor).id(TelegramMessagePreProcessor.class.getSimpleName())
+                .process(routeSelectProcessor).id(RouteSelectProcessor.class.getSimpleName())
                 .choice()
                 .when(exchange -> exchange.getMessage().getHeader(TelegramConstants.TELEGRAM_CHAT_ID, String.class).startsWith("-"))
                     .process(groupCommandProcessor).id(GroupCommandProcessor.class.getSimpleName())
