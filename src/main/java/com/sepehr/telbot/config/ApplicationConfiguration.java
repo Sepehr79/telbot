@@ -24,6 +24,9 @@ public class ApplicationConfiguration {
     @Value("${telegram.file.path.api}")
     private String filePathApi;
 
+    @Value("${telegram.photo.send.api}")
+    private String photoSendApi;
+
     public static String REPLY_MESSAGE_ID = "MessageId";
 
     public static String ROUTE_SELECT = "route";
@@ -56,6 +59,10 @@ public class ApplicationConfiguration {
 
     public String getFilePathApi(final String filePath) {
         return filePathApi + filePath;
+    }
+
+    public String getPhotoSendApi() {
+        return photoSendApi;
     }
 
 }

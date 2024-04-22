@@ -1,17 +1,18 @@
 package com.sepehr.telbot.camel.routes;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import com.sepehr.telbot.config.ApplicationConfiguration;
-import io.undertow.util.URLUtils;
 import lombok.RequiredArgsConstructor;
+import org.apache.camel.component.telegram.TelegramConstants;
 import org.apache.camel.component.telegram.model.IncomingMessage;
-import org.apache.camel.component.telegram.model.OutgoingPhotoMessage;
 import org.apache.camel.component.telegram.model.OutgoingTextMessage;
+import org.apache.camel.component.vertx.http.VertxHttpConstants;
 import org.apache.camel.model.dataformat.JsonLibrary;
 import org.springframework.stereotype.Component;
-import org.springframework.web.util.UriUtils;
 
 import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
+import java.util.Map;
 
 @Component
 @RequiredArgsConstructor
@@ -20,7 +21,7 @@ public class AdRouteBuilder extends AbstractRouteBuilder {
     private final ApplicationConfiguration applicationConfiguration;
 
     @Override
-    public void configure() throws Exception {
+    public void configure() {
         from("direct:ad")
                 .to("log:ad?showHeaders=true")
                 .process(exchange -> {
@@ -33,28 +34,33 @@ public class AdRouteBuilder extends AbstractRouteBuilder {
                 })
                 .choice()
                 .when(exchange -> exchange.getMessage().getHeaders().containsKey(ApplicationConfiguration.PHOTO_ID))
-                    .setBody(exchange -> null)
-                    .toD("vertx-http:" + applicationConfiguration.getFileIdApi("${header.photoId}"))
                     .process(exchange -> {
-                        JsonNode body = exchange.getMessage().getBody(JsonNode.class);
-                        String filePath = body.get("result").get("file_path").textValue();
-                        exchange.getMessage().setHeader(ApplicationConfiguration.PHOTO_PATH, filePath);
+                        final String chatId = exchange.getMessage().getHeader(TelegramConstants.TELEGRAM_CHAT_ID, String.class);
+                        final String photoId = exchange.getMessage().getHeader(ApplicationConfiguration.PHOTO_ID, String.class);
+                        Map<String, String> body = new HashMap<>();
+                        body.put("chat_id", chatId);
+                        body.put("photo", photoId);
+                        body.put("caption", "");
+                        exchange.getMessage().setBody(body);
                     })
-                    .setBody(exchange -> null)
-                    .toD("vertx-http:" + applicationConfiguration.getFilePathApi("${header.photoPath}"))
+                    .marshal().json(JsonLibrary.Jackson)
+                    .setHeader(VertxHttpConstants.CONTENT_TYPE, constant("application/json"))
+                    .setHeader(VertxHttpConstants.HTTP_METHOD, constant("POST"))
+                    .to("vertx-http:" + applicationConfiguration.getPhotoSendApi())
+                .otherwise()
+                    .process(exchange -> {
+                        final String bodyMessage = exchange.getMessage().getHeader(ApplicationConfiguration.BODY_MESSAGE, String.class);
+                        final String chatId = exchange.getMessage().getHeader(TelegramConstants.TELEGRAM_CHAT_ID, String.class);
+                        OutgoingTextMessage outgoingTextMessage = new OutgoingTextMessage();
+                        outgoingTextMessage.setText(bodyMessage.substring(3));
+                        outgoingTextMessage.setChatId(chatId);
+                        outgoingTextMessage.setParseMode("MARKDOWN");
+                        exchange.getMessage().setBody(outgoingTextMessage);
+                    })
+                    .to(applicationConfiguration.getTelegramUri())
                 .end()
-                .process(exchange -> {
-
-                    byte[] body = (byte[]) exchange.getMessage().getBody();
-                    final String text = exchange.getMessage().getHeader(ApplicationConfiguration.BODY_MESSAGE, String.class)
-                            .substring(3);
-                    OutgoingPhotoMessage outgoingPhotoMessage = new OutgoingPhotoMessage();
-                    outgoingPhotoMessage.setPhoto(body);
-                    outgoingPhotoMessage.setFilenameWithExtension("photo");
-                    outgoingPhotoMessage.setCaption(text.replaceAll("\n", "\n\t"));
-                    exchange.getMessage().setBody(outgoingPhotoMessage);
-                })
                 .to("log:fileResponse?showHeaders=true")
+                .stop()
                 ;
     }
 }
