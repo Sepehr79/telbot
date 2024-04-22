@@ -9,8 +9,6 @@ import org.apache.camel.component.vertx.http.VertxHttpConstants;
 import org.apache.camel.model.dataformat.JsonLibrary;
 import org.springframework.stereotype.Component;
 
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -37,13 +35,15 @@ public class AdRouteBuilder extends AbstractRouteBuilder {
                     .process(exchange -> {
                         final String chatId = exchange.getMessage().getHeader(TelegramConstants.TELEGRAM_CHAT_ID, String.class);
                         final String photoId = exchange.getMessage().getHeader(ApplicationConfiguration.PHOTO_ID, String.class);
+                        final String bodyMessage = exchange.getMessage().getHeader(ApplicationConfiguration.BODY_MESSAGE, String.class);
                         Map<String, String> body = new HashMap<>();
                         body.put("chat_id", chatId);
                         body.put("photo", photoId);
-                        body.put("caption", "");
+                        body.put("caption", bodyMessage.substring(4));
                         exchange.getMessage().setBody(body);
                     })
                     .marshal().json(JsonLibrary.Jackson)
+                    .removeHeader(ApplicationConfiguration.BODY_MESSAGE)
                     .setHeader(VertxHttpConstants.CONTENT_TYPE, constant("application/json"))
                     .setHeader(VertxHttpConstants.HTTP_METHOD, constant("POST"))
                     .to("vertx-http:" + applicationConfiguration.getPhotoSendApi())
@@ -52,7 +52,7 @@ public class AdRouteBuilder extends AbstractRouteBuilder {
                         final String bodyMessage = exchange.getMessage().getHeader(ApplicationConfiguration.BODY_MESSAGE, String.class);
                         final String chatId = exchange.getMessage().getHeader(TelegramConstants.TELEGRAM_CHAT_ID, String.class);
                         OutgoingTextMessage outgoingTextMessage = new OutgoingTextMessage();
-                        outgoingTextMessage.setText(bodyMessage.substring(3));
+                        outgoingTextMessage.setText(bodyMessage.substring(4));
                         outgoingTextMessage.setChatId(chatId);
                         outgoingTextMessage.setParseMode("MARKDOWN");
                         exchange.getMessage().setBody(outgoingTextMessage);
