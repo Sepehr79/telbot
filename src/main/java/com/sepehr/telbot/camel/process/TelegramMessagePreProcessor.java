@@ -26,7 +26,8 @@ public class TelegramMessagePreProcessor implements Processor {
             exchange.getMessage().setHeader(TelegramConstants.TELEGRAM_CHAT_ID, chatId);
             exchange.getMessage().setHeader(ApplicationConfiguration.BUTTON_RESPONSE, true);
         } else {
-            bodyMessage = exchange.getMessage().getBody(IncomingMessage.class).getText();
+            final IncomingMessage incomingMessage = exchange.getMessage().getBody(IncomingMessage.class);
+            bodyMessage = incomingMessage.getText() != null ? incomingMessage.getText() : incomingMessage.getCaption();
             messageId = exchange.getMessage().getBody(IncomingMessage.class).getMessageId().intValue();
             exchange.getMessage().setHeader(ApplicationConfiguration.BUTTON_RESPONSE, false);
         }
