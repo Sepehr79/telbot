@@ -11,4 +11,5 @@ public interface ActiveChatRepository extends CrudRepository<ActiveChat, String>
 
     List<ActiveChat> findAll();
 
+    void deleteActiveChatByLastUpdateLessThan(long calcTime);
 }
