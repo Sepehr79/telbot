@@ -18,13 +18,28 @@ public class ApplicationConfiguration {
     @Value("${openai.apikey}")
     private String openaiKey;
 
-    public static String MESSAGE_ID = "MessageId";
+    @Value("${telegram.file.id.api}")
+    private String fileIdApi;
+
+    @Value("${telegram.file.path.api}")
+    private String filePathApi;
+
+    @Value("${telegram.photo.send.api}")
+    private String photoSendApi;
+
+    public static String REPLY_MESSAGE_ID = "MessageId";
 
     public static String ROUTE_SELECT = "route";
 
     public static String BUTTON_RESPONSE = "buttonResponse";
 
     public static String USER_PROFILE = "userProfile";
+
+    public static String BODY_MESSAGE = "bodyMessage";
+
+    public static String FILE_ID = "photoId";
+
+    public static String PHOTO_PATH = "photoPath";
 
     public String getTelegramUri() {
         return "telegram:bots" + (telegramProxyEnable ? telegramProxyConfig : "");
@@ -36,6 +51,18 @@ public class ApplicationConfiguration {
 
     public String getOpenaiKey() {
         return openaiKey;
+    }
+
+    public String getFileIdApi(final String fileId) {
+        return fileIdApi + fileId;
+    }
+
+    public String getFilePathApi(final String filePath) {
+        return filePathApi + filePath;
+    }
+
+    public String getPhotoSendApi() {
+        return photoSendApi;
     }
 
 }

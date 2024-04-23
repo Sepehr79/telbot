@@ -1,11 +1,14 @@
 version: '3'
 services:
+
   redis:
     image: 'redis'
     volumes:
       - redis_data:/data
+
   telbot:
-    image: sepehr79m/telbot
+#    image: sepehr79m/telbot
+    build: .
     environment:
       SPRING_REDIS_HOST: redis
 

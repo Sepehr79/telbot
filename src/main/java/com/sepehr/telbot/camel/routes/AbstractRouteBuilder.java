@@ -12,7 +12,7 @@ public abstract class AbstractRouteBuilder extends RouteBuilder {
 
     public OutgoingMessage getOutGoingTextMessageBuilder(final Exchange exchange, final String text, final InlineKeyboardMarkup replyMarkup) {
         final boolean buttonResponse = exchange.getMessage().getHeader(ApplicationConfiguration.BUTTON_RESPONSE, Boolean.class);
-        final Integer messageId = exchange.getMessage().getHeader(ApplicationConfiguration.MESSAGE_ID, Integer.class);
+        final Integer messageId = exchange.getMessage().getHeader(ApplicationConfiguration.REPLY_MESSAGE_ID, Integer.class);
         if (buttonResponse) {
             return EditMessageTextMessage.builder()
                     .text(text)
