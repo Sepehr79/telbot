@@ -48,6 +48,7 @@ public class AdRouteBuilder extends AbstractRouteBuilder {
                     );
                 })
                 .split(bodyAs(String.class).tokenize(","))
+                .parallelProcessing()
                 .to("direct:reply")
                 .end()
                 .stop();
