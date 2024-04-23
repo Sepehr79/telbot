@@ -9,6 +9,7 @@ import org.apache.camel.component.telegram.model.IncomingMessage;
 import org.apache.camel.component.telegram.model.OutgoingTextMessage;
 import org.apache.camel.component.vertx.http.VertxHttpConstants;
 import org.apache.camel.model.dataformat.JsonLibrary;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.util.HashMap;
@@ -24,9 +25,18 @@ public class AdRouteBuilder extends AbstractRouteBuilder {
 
     private final ActiveChatRepository activeChatRepository;
 
+    @Value("${telegram.admin.chatId}")
+    private String adminId;
+
     @Override
     public void configure() {
         from("direct:ad")
+                .choice()
+                    .when(exchange ->
+                            !exchange.getMessage().getHeader(TelegramConstants.TELEGRAM_CHAT_ID, String.class)
+                                    .equals(adminId))
+                    .to("direct:ignore")
+                .end()
                 .to("log:ad?showHeaders=true")
                 .process(exchange -> {
                     IncomingMessage incomingMessage = exchange.getMessage().getBody(IncomingMessage.class);
