@@ -37,7 +37,7 @@ public class ApplicationConfiguration {
 
     public static String BODY_MESSAGE = "bodyMessage";
 
-    public static String PHOTO_ID = "photoId";
+    public static String FILE_ID = "photoId";
 
     public static String PHOTO_PATH = "photoPath";
 

@@ -5,7 +5,6 @@ import com.sepehr.telbot.model.entity.ActiveChat;
 import com.sepehr.telbot.model.repo.ActiveChatRepository;
 import lombok.RequiredArgsConstructor;
 import org.apache.camel.component.telegram.TelegramConstants;
-import org.apache.camel.component.telegram.model.IncomingMessage;
 import org.apache.camel.component.telegram.model.OutgoingTextMessage;
 import org.apache.camel.component.vertx.http.VertxHttpConstants;
 import org.apache.camel.model.dataformat.JsonLibrary;
@@ -39,12 +38,6 @@ public class AdRouteBuilder extends AbstractRouteBuilder {
                 .end()
                 .to("log:ad?showHeaders=true")
                 .process(exchange -> {
-                    IncomingMessage incomingMessage = exchange.getMessage().getBody(IncomingMessage.class);
-                    if (incomingMessage.getPhoto() != null) {
-                        exchange.getMessage().setHeader(ApplicationConfiguration.PHOTO_ID, incomingMessage.getPhoto().get(
-                                incomingMessage.getPhoto().size() - 1
-                        ).getFileId());
-                    }
                     List<ActiveChat> allActiveChats = activeChatRepository.findAll();
                     exchange.getMessage().setBody(
                             allActiveChats.stream().map(ActiveChat::getChatId).collect(Collectors.joining(","))
@@ -57,10 +50,10 @@ public class AdRouteBuilder extends AbstractRouteBuilder {
 
                 from("direct:reply")
                 .choice()
-                .when(exchange -> exchange.getMessage().getHeaders().containsKey(ApplicationConfiguration.PHOTO_ID))
+                .when(exchange -> exchange.getMessage().getHeaders().containsKey(ApplicationConfiguration.FILE_ID))
                     .process(exchange -> {
                         final String chatId = exchange.getMessage().getBody(String.class);
-                        final String photoId = exchange.getMessage().getHeader(ApplicationConfiguration.PHOTO_ID, String.class);
+                        final String photoId = exchange.getMessage().getHeader(ApplicationConfiguration.FILE_ID, String.class);
                         final String bodyMessage = exchange.getMessage().getHeader(ApplicationConfiguration.BODY_MESSAGE, String.class);
                         Map<String, String> body = new HashMap<>();
                         body.put("chat_id", chatId);

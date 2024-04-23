@@ -46,6 +46,7 @@ public class ChatGptRouteBuilder extends AbstractRouteBuilder {
                     exchange.getMessage().setBody(userProfile.getGptReq());
                 })
                 .marshal().json(JsonLibrary.Jackson)
+                .removeHeader(ApplicationConfiguration.BODY_MESSAGE)
                 .to("log:chatGptFinalResult?showHeaders=true")
                 .to(applicationConfiguration.getChatGptUrl())
                 .to("log:chatGptAnswer?showHeaders=true")

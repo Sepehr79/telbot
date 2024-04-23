@@ -11,8 +11,6 @@ import org.apache.camel.component.telegram.model.IncomingCallbackQuery;
 import org.apache.camel.component.telegram.model.IncomingMessage;
 import org.springframework.stereotype.Component;
 
-import java.time.LocalDateTime;
-
 /**
  * Gathering required data
  */
@@ -38,6 +36,11 @@ public class TelegramMessagePreProcessor implements Processor {
             bodyMessage = incomingMessage.getText() != null ? incomingMessage.getText() : incomingMessage.getCaption();
             messageId = exchange.getMessage().getBody(IncomingMessage.class).getMessageId().intValue();
             exchange.getMessage().setHeader(ApplicationConfiguration.BUTTON_RESPONSE, false);
+            if (incomingMessage.getPhoto() != null) {
+                exchange.getMessage().setHeader(ApplicationConfiguration.FILE_ID, incomingMessage.getPhoto().get(
+                        incomingMessage.getPhoto().size() - 1
+                ).getFileId());
+            }
         }
         exchange.getMessage().setHeader(ApplicationConfiguration.BODY_MESSAGE, bodyMessage);
         exchange.getMessage().setHeader(ApplicationConfiguration.REPLY_MESSAGE_ID, messageId);
