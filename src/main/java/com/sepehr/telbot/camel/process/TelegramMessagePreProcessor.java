@@ -1,7 +1,9 @@
 package com.sepehr.telbot.camel.process;
 
 import com.sepehr.telbot.config.ApplicationConfiguration;
-import com.sepehr.telbot.model.entity.Command;
+import com.sepehr.telbot.model.entity.ActiveChat;
+import com.sepehr.telbot.model.repo.ActiveChatRepository;
+import lombok.RequiredArgsConstructor;
 import org.apache.camel.Exchange;
 import org.apache.camel.Processor;
 import org.apache.camel.component.telegram.TelegramConstants;
@@ -9,11 +11,17 @@ import org.apache.camel.component.telegram.model.IncomingCallbackQuery;
 import org.apache.camel.component.telegram.model.IncomingMessage;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDateTime;
+
 /**
  * Gathering required data
  */
 @Component
+@RequiredArgsConstructor
 public class TelegramMessagePreProcessor implements Processor {
+
+    private final ActiveChatRepository activeChatRepository;
+
     @Override
     public void process(Exchange exchange) {
         int messageId;
@@ -34,5 +42,8 @@ public class TelegramMessagePreProcessor implements Processor {
         exchange.getMessage().setHeader(ApplicationConfiguration.BODY_MESSAGE, bodyMessage);
         exchange.getMessage().setHeader(ApplicationConfiguration.REPLY_MESSAGE_ID, messageId);
         exchange.getMessage().setHeader(TelegramConstants.TELEGRAM_PARSE_MODE, "MARKDOWN");
+
+        final String chatId = exchange.getMessage().getHeader(TelegramConstants.TELEGRAM_CHAT_ID, String.class);
+        activeChatRepository.save(new ActiveChat(chatId, System.currentTimeMillis()));
     }
 }

@@ -6,6 +6,8 @@ import com.sepehr.telbot.model.entity.GptMessage;
 import com.sepehr.telbot.model.entity.GptRequestBuilder;
 import com.sepehr.telbot.model.entity.UserProfile;
 import com.sepehr.telbot.model.repo.UserProfileRepository;
+import io.vertx.core.http.HttpHeaders;
+import io.vertx.core.http.HttpMethod;
 import lombok.RequiredArgsConstructor;
 import org.apache.camel.Exchange;
 import org.apache.camel.component.telegram.TelegramConstants;
@@ -30,6 +32,7 @@ public class ChatGptRouteBuilder extends AbstractRouteBuilder {
         from("direct:chat")
                 .setHeader(Exchange.CONTENT_TYPE, constant("application/json"))
                 .setHeader("Authorization", constant(applicationConfiguration.getOpenaiKey()))
+                .setHeader(HttpHeaders.USER_AGENT.toString(), constant("GPTtelbot"))
                 .process(exchange -> {
                     final String body = exchange.getMessage().getBody(IncomingMessage.class).getText();
                     final String chatId = exchange.getMessage().getHeader(TelegramConstants.TELEGRAM_CHAT_ID, String.class);
