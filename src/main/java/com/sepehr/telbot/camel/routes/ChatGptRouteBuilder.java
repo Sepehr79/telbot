@@ -34,7 +34,7 @@ public class ChatGptRouteBuilder extends AbstractRouteBuilder {
                 .setHeader("Authorization", constant(applicationConfiguration.getOpenaiKey()))
                 .setHeader(HttpHeaders.USER_AGENT.toString(), constant("GPTtelbot"))
                 .process(exchange -> {
-                    final String body = exchange.getMessage().getBody(IncomingMessage.class).getText();
+                    final String body = exchange.getMessage().getBody(String.class);
                     final String chatId = exchange.getMessage().getHeader(TelegramConstants.TELEGRAM_CHAT_ID, String.class);
                     final UserProfile userProfile = userProfileRepository.findById(chatId).orElseGet(() ->
                             UserProfile.builder().id(chatId)

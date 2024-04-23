@@ -42,7 +42,7 @@ public class TelegramMessagePreProcessor implements Processor {
                 ).getFileId());
             }
         }
-        exchange.getMessage().setHeader(ApplicationConfiguration.BODY_MESSAGE, bodyMessage);
+        exchange.getMessage().setBody(bodyMessage);
         exchange.getMessage().setHeader(ApplicationConfiguration.REPLY_MESSAGE_ID, messageId);
         exchange.getMessage().setHeader(TelegramConstants.TELEGRAM_PARSE_MODE, "MARKDOWN");
 

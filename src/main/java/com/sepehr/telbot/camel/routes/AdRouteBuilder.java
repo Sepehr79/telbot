@@ -38,6 +38,8 @@ public class AdRouteBuilder extends AbstractRouteBuilder {
                 .end()
                 .to("log:ad?showHeaders=true")
                 .process(exchange -> {
+                    final String body = exchange.getMessage().getBody(String.class);
+                    exchange.getMessage().setHeader(ApplicationConfiguration.BODY_MESSAGE, body);
                     List<ActiveChat> allActiveChats = activeChatRepository.findAll();
                     exchange.getMessage().setBody(
                             allActiveChats.stream().map(ActiveChat::getChatId).collect(Collectors.joining(","))
@@ -78,6 +80,7 @@ public class AdRouteBuilder extends AbstractRouteBuilder {
                         exchange.getMessage().setBody(outgoingTextMessage);
                         exchange.getMessage().setHeader(TelegramConstants.TELEGRAM_CHAT_ID, chatId);
                     })
+                    .removeHeader(ApplicationConfiguration.BODY_MESSAGE)
                     .to(applicationConfiguration.getTelegramUri())
                 .end();
     }

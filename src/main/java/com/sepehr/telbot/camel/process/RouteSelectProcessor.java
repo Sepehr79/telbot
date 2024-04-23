@@ -12,7 +12,7 @@ import java.util.Arrays;
 public class RouteSelectProcessor implements Processor {
     @Override
     public void process(Exchange exchange) {
-        final String bodyMessage = exchange.getMessage().getHeader(ApplicationConfiguration.BODY_MESSAGE, String.class);
+        final String bodyMessage = exchange.getMessage().getBody(String.class);
         String routeCommand = Arrays.stream(Command.values())
                 .filter(command -> bodyMessage.startsWith("/" + command.toString().toLowerCase()))
                 .findFirst()
