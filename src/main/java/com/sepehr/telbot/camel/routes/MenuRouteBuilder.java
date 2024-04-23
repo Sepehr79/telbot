@@ -1,5 +1,6 @@
 package com.sepehr.telbot.camel.routes;
 
+import com.sepehr.telbot.config.ApplicationConfiguration;
 import org.apache.camel.component.telegram.model.InlineKeyboardButton;
 import org.apache.camel.component.telegram.model.InlineKeyboardMarkup;
 import org.apache.camel.component.telegram.model.OutgoingMessage;
@@ -9,8 +10,13 @@ import java.util.List;
 
 @Component
 public class MenuRouteBuilder extends AbstractRouteBuilder {
+
+    public MenuRouteBuilder(ApplicationConfiguration applicationConfiguration) {
+        super(applicationConfiguration);
+    }
+
     @Override
-    public void configure() {
+    public void configureOtherRoutes() {
         from("direct:start")
                 .process(exchange -> {
                     final InlineKeyboardMarkup replyKeyboardMarkup =

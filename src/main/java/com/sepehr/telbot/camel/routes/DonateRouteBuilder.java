@@ -1,17 +1,19 @@
 package com.sepehr.telbot.camel.routes;
 
 import com.sepehr.telbot.config.ApplicationConfiguration;
-import lombok.RequiredArgsConstructor;
 import org.apache.camel.component.telegram.TelegramConstants;
 import org.apache.camel.component.telegram.model.OutgoingTextMessage;
 import org.springframework.stereotype.Component;
 
 @Component
-@RequiredArgsConstructor
 public class DonateRouteBuilder extends AbstractRouteBuilder {
 
+    public DonateRouteBuilder(ApplicationConfiguration applicationConfiguration) {
+        super(applicationConfiguration);
+    }
+
     @Override
-    public void configure() {
+    public void configureOtherRoutes() {
         from("direct:donate")
                 .process(exchange -> {
                     String chatId = exchange.getMessage().getHeader(TelegramConstants.TELEGRAM_CHAT_ID, String.class);

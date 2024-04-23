@@ -17,17 +17,22 @@ import org.apache.camel.model.dataformat.JsonLibrary;
 import org.springframework.stereotype.Component;
 
 @Component
-@RequiredArgsConstructor
 public class ChatGptRouteBuilder extends AbstractRouteBuilder {
-
-    private final ApplicationConfiguration applicationConfiguration;
 
     private final GptRequestBuilder gptRequestBuilder;
 
     private final UserProfileRepository userProfileRepository;
 
+    public ChatGptRouteBuilder(ApplicationConfiguration applicationConfiguration,
+                               GptRequestBuilder gptRequestBuilder,
+                               UserProfileRepository userProfileRepository) {
+        super(applicationConfiguration);
+        this.gptRequestBuilder = gptRequestBuilder;
+        this.userProfileRepository = userProfileRepository;
+    }
+
     @Override
-    public void configure() {
+    public void configureOtherRoutes() {
 
         from("direct:chat")
                 .setHeader(Exchange.CONTENT_TYPE, constant("application/json"))
