@@ -7,14 +7,16 @@ import com.sepehr.telbot.model.entity.GptRequestBuilder;
 import com.sepehr.telbot.model.entity.UserProfile;
 import com.sepehr.telbot.model.repo.UserProfileRepository;
 import io.vertx.core.http.HttpHeaders;
-import io.vertx.core.http.HttpMethod;
-import lombok.RequiredArgsConstructor;
 import org.apache.camel.Exchange;
 import org.apache.camel.component.telegram.TelegramConstants;
-import org.apache.camel.component.telegram.model.IncomingMessage;
 import org.apache.camel.component.telegram.model.OutgoingTextMessage;
+import org.apache.camel.component.vertx.http.VertxHttpConstants;
 import org.apache.camel.model.dataformat.JsonLibrary;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+
+import java.util.HashMap;
+import java.util.Map;
 
 @Component
 public class ChatGptRouteBuilder extends AbstractRouteBuilder {
@@ -22,6 +24,7 @@ public class ChatGptRouteBuilder extends AbstractRouteBuilder {
     private final GptRequestBuilder gptRequestBuilder;
 
     private final UserProfileRepository userProfileRepository;
+
 
     public ChatGptRouteBuilder(ApplicationConfiguration applicationConfiguration,
                                GptRequestBuilder gptRequestBuilder,
@@ -35,6 +38,7 @@ public class ChatGptRouteBuilder extends AbstractRouteBuilder {
     public void configureOtherRoutes() {
 
         from("direct:chat")
+                .to("seda:typingAction")
                 .setHeader(Exchange.CONTENT_TYPE, constant("application/json"))
                 .setHeader("Authorization", constant(applicationConfiguration.getOpenaiKey()))
                 .setHeader(HttpHeaders.USER_AGENT.toString(), constant("GPTtelbot"))
@@ -72,6 +76,21 @@ public class ChatGptRouteBuilder extends AbstractRouteBuilder {
 
                     exchange.getMessage().setBody(outMessage);
                 });
+
+        from("seda:typingAction")
+                .process(exchange -> {
+                    final String chatId = exchange.getMessage().getHeader(TelegramConstants.TELEGRAM_CHAT_ID, String.class);
+                    Map<String, String> body = new HashMap<>();
+                    body.put("chat_id", chatId);
+                    body.put("action", "typing");
+                    exchange.getMessage().setBody(body);
+                })
+                .marshal().json(JsonLibrary.Jackson)
+                .setHeader(VertxHttpConstants.HTTP_METHOD, constant("POST"))
+                .setHeader(VertxHttpConstants.CONTENT_TYPE, constant("application/json"))
+                .to(applicationConfiguration.getChatActionApi())
+        ;
+
 
     }
 }

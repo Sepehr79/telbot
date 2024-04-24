@@ -19,7 +19,6 @@ public class ActiveChat {
     @Id
     private String chatId;
 
-    @Column(name="`last_update`")
     private long lastUpdate;
 
 }
