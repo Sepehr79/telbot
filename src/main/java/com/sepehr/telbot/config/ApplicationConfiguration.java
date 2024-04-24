@@ -27,6 +27,9 @@ public class ApplicationConfiguration {
     @Value("${telegram.photo.send.api}")
     private String photoSendApi;
 
+    @Value("${telegram.chat.action.typing}")
+    private String chatActionApi;
+
     public static String REPLY_MESSAGE_ID = "MessageId";
 
     public static String ROUTE_SELECT = "route";
@@ -63,6 +66,10 @@ public class ApplicationConfiguration {
 
     public String getPhotoSendApi() {
         return photoSendApi;
+    }
+
+    public String getChatActionApi() {
+        return chatActionApi;
     }
 
 }
