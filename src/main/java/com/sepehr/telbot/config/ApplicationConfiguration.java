@@ -33,6 +33,12 @@ public class ApplicationConfiguration {
     @Value("${telegram.chat.action.typing}")
     private String chatActionApi;
 
+    @Value("${spring.security.user.name}")
+    private String uiDefaultUser;
+
+    @Value("${spring.security.user.password}")
+    private String uiDefaultPassword;
+
     public static String REPLY_MESSAGE_ID = "MessageId";
 
     public static String ROUTE_SELECT = "route";
@@ -77,6 +83,14 @@ public class ApplicationConfiguration {
 
     public String getChatActionApi() {
         return chatActionApi;
+    }
+
+    public String getUiDefaultUser() {
+        return uiDefaultUser;
+    }
+
+    public String getUiDefaultPassword() {
+        return uiDefaultPassword;
     }
 
 }

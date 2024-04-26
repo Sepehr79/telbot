@@ -34,17 +34,17 @@
 </div>
 <div class="container">
     <div class="form-container">
-        <h2>Send Telegram Message</h2>
-        <form method="POST" th:action="@{/send-message}">
+        <h2>Change Current User</h2>
+        <form method="POST" th:action="@{/change-user}">
             <div class="form-group">
-                <label for="content">Content URL: (optional)</label>
-                <input type="text" class="form-control" id="content" th:field="${adminMessage.content}" placeholder="Enter content URL">
+                <label for="content">New Username: (required)</label>
+                <input type="text" class="form-control" id="content" th:name="newUser" placeholder="Enter new username" required>
             </div>
             <div class="form-group">
-                <label for="caption">Caption: (required in markdown format)</label>
-                <textarea style="height: 200px" class="form-control"  id="caption" dir="rtl" th:field="${adminMessage.caption}" rows="3" required></textarea>
+                <label for="pass">New Password: (required)</label>
+                <input type="text" class="form-control"  id="pass" th:name="newPass" required>
             </div>
-            <button type="submit" class="btn btn-primary">Send Message</button>
+            <button type="submit" class="btn btn-primary">Change User</button>
         </form>
     </div>
 </div>
