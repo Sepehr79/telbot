@@ -9,6 +9,9 @@ public class ApplicationConfiguration {
     @Value("${camel.telegram.proxy.enable}")
     private boolean telegramProxyEnable;
 
+    @Value("${telegram.admin.chatId}")
+    private String adminId;
+
     @Value("${camel.telegram.proxy.config}")
     private String telegramProxyConfig;
 
@@ -43,6 +46,10 @@ public class ApplicationConfiguration {
     public static String FILE_ID = "photoId";
 
     public static String PHOTO_PATH = "photoPath";
+
+    public String getAdminChatId() {
+        return adminId;
+    }
 
     public String getTelegramUri() {
         return "telegram:bots" + (telegramProxyEnable ? telegramProxyConfig : "");

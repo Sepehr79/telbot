@@ -10,7 +10,6 @@ public enum Command {
     START,
     DONATE,
     VERSION,
-    AD
     ;
 
 

@@ -30,9 +30,7 @@ public abstract class AbstractRouteBuilder extends RouteBuilder {
                     }
                 })
                 .choice().when(exchange -> exchange.getMessage().getHeaders().containsKey("Http429"))
-                .to(applicationConfiguration.getTelegramUri())
-                .otherwise().to("direct:ignore")
-        ;
+                .to(applicationConfiguration.getTelegramUri());
         configureOtherRoutes();
     }
 

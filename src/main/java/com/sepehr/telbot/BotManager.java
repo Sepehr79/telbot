@@ -46,7 +46,7 @@ public class BotManager extends RouteBuilder {
                 .transform(constant(appVersion));
 
         from("direct:ignore")
-                .to("log:ignoreMessage")
+                .to("log:ignoreMessage?showHeaders=true")
                 .stop();
 
     }

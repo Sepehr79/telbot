@@ -7,7 +7,6 @@ import org.apache.camel.component.telegram.TelegramConstants;
 import org.apache.camel.component.telegram.model.OutgoingTextMessage;
 import org.apache.camel.component.vertx.http.VertxHttpConstants;
 import org.apache.camel.model.dataformat.JsonLibrary;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.util.HashMap;
@@ -26,17 +25,9 @@ public class AdRouteBuilder extends AbstractRouteBuilder {
         this.activeChatRepository = activeChatRepository;
     }
 
-    @Value("${telegram.admin.chatId}")
-    private String adminId;
-
     @Override
     public void configureOtherRoutes() {
         from("direct:ad")
-                .choice()
-                .when(exchange ->
-                        !exchange.getMessage().getHeader(TelegramConstants.TELEGRAM_CHAT_ID, String.class)
-                                .equals(adminId))
-                .to("direct:ignore")
                 .end()
                 .to("log:ad?showHeaders=true")
                 .process(exchange -> {
@@ -63,7 +54,8 @@ public class AdRouteBuilder extends AbstractRouteBuilder {
                     Map<String, String> body = new HashMap<>();
                     body.put("chat_id", chatId);
                     body.put("photo", photoId);
-                    body.put("caption", bodyMessage.substring(3));
+                    body.put("caption", bodyMessage);
+                    body.put("parse_mode", "markdown");
                     exchange.getMessage().setHeader(TelegramConstants.TELEGRAM_CHAT_ID, chatId);
                     exchange.getMessage().setBody(body);
                 })
@@ -77,9 +69,9 @@ public class AdRouteBuilder extends AbstractRouteBuilder {
                     final String bodyMessage = exchange.getMessage().getHeader(ApplicationConfiguration.BODY_MESSAGE, String.class);
                     final String chatId = exchange.getMessage().getBody(String.class);
                     OutgoingTextMessage outgoingTextMessage = new OutgoingTextMessage();
-                    outgoingTextMessage.setText(bodyMessage.substring(3));
+                    outgoingTextMessage.setText(bodyMessage);
                     outgoingTextMessage.setChatId(chatId);
-                    outgoingTextMessage.setParseMode("MARKDOWN");
+                    outgoingTextMessage.setParseMode("markdown");
                     exchange.getMessage().setBody(outgoingTextMessage);
                     exchange.getMessage().setHeader(TelegramConstants.TELEGRAM_CHAT_ID, chatId);
                 })
