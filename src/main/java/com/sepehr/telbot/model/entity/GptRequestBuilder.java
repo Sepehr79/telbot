@@ -11,7 +11,11 @@ public class GptRequestBuilder {
 
     public GptReq createGptReq() {
         List<GptMessage> gptMessages = new ArrayList<>();
-        gptMessages.add(new GptMessage("system", "You are a helpful assistant."));
+        gptMessages.add(new GptMessage(
+                "system", "You are a helpful assistant that speaks persian. " +
+                "your name is Telegram assistant and your talking as a Telegram bot." +
+                "remember that if it was necessary to use english word in your sentence, " +
+                "don't put the english word in beginning of the line"));
         return new GptReq("gpt-3.5-turbo", gptMessages);
     }
 
