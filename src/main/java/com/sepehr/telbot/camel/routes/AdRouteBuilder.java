@@ -1,6 +1,7 @@
 package com.sepehr.telbot.camel.routes;
 
 import com.sepehr.telbot.config.ApplicationConfiguration;
+import com.sepehr.telbot.model.AppIncomingReq;
 import com.sepehr.telbot.model.entity.ActiveChat;
 import com.sepehr.telbot.model.repo.ActiveChatRepository;
 import org.apache.camel.component.telegram.TelegramConstants;
@@ -31,7 +32,7 @@ public class AdRouteBuilder extends AbstractRouteBuilder {
                 .end()
                 .to("log:ad?showHeaders=true")
                 .process(exchange -> {
-                    final String body = exchange.getMessage().getBody(String.class);
+                    final AppIncomingReq body = exchange.getMessage().getBody(AppIncomingReq.class);
                     exchange.getMessage().setHeader(ApplicationConfiguration.BODY_MESSAGE, body);
                     List<ActiveChat> allActiveChats = activeChatRepository.findAll();
                     exchange.getMessage().setBody(
@@ -46,27 +47,25 @@ public class AdRouteBuilder extends AbstractRouteBuilder {
 
         from("direct:reply")
                 .choice()
-                .when(exchange -> exchange.getMessage().getHeaders().containsKey(ApplicationConfiguration.FILE_ID))
+                .when(exchange -> exchange.getMessage().getHeader(ApplicationConfiguration.BODY_MESSAGE, AppIncomingReq.class).getPhotoUrl() != null)
                 .process(exchange -> {
                     final String chatId = exchange.getMessage().getBody(String.class);
-                    final String photoId = exchange.getMessage().getHeader(ApplicationConfiguration.FILE_ID, String.class);
-                    final String bodyMessage = exchange.getMessage().getHeader(ApplicationConfiguration.BODY_MESSAGE, String.class);
+                    final AppIncomingReq appIncomingReq = exchange.getMessage().getHeader(ApplicationConfiguration.BODY_MESSAGE, AppIncomingReq.class);
                     Map<String, String> body = new HashMap<>();
                     body.put("chat_id", chatId);
-                    body.put("photo", photoId);
-                    body.put("caption", bodyMessage);
+                    body.put("photo", appIncomingReq.getPhotoUrl());
+                    body.put("caption", appIncomingReq.getBody());
                     body.put("parse_mode", "markdown");
                     exchange.getMessage().setHeader(TelegramConstants.TELEGRAM_CHAT_ID, chatId);
                     exchange.getMessage().setBody(body);
                 })
                 .marshal().json(JsonLibrary.Jackson)
-                .removeHeader(ApplicationConfiguration.BODY_MESSAGE)
                 .setHeader(VertxHttpConstants.CONTENT_TYPE, constant("application/json"))
                 .setHeader(VertxHttpConstants.HTTP_METHOD, constant("POST"))
                 .to("vertx-http:" + applicationConfiguration.getPhotoSendApi())
                 .otherwise()
                 .process(exchange -> {
-                    final String bodyMessage = exchange.getMessage().getHeader(ApplicationConfiguration.BODY_MESSAGE, String.class);
+                    final String bodyMessage = exchange.getMessage().getHeader(ApplicationConfiguration.BODY_MESSAGE, AppIncomingReq.class).getBody();
                     final String chatId = exchange.getMessage().getBody(String.class);
                     OutgoingTextMessage outgoingTextMessage = new OutgoingTextMessage();
                     outgoingTextMessage.setText(bodyMessage);
@@ -75,7 +74,6 @@ public class AdRouteBuilder extends AbstractRouteBuilder {
                     exchange.getMessage().setBody(outgoingTextMessage);
                     exchange.getMessage().setHeader(TelegramConstants.TELEGRAM_CHAT_ID, chatId);
                 })
-                .removeHeader(ApplicationConfiguration.BODY_MESSAGE)
                 .to(applicationConfiguration.getTelegramUri())
                 .end();
     }

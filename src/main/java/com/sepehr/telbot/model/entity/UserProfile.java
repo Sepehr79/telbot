@@ -1,5 +1,6 @@
 package com.sepehr.telbot.model.entity;
 
+import com.sepehr.telbot.model.GptReq;
 import lombok.Builder;
 import lombok.Data;
 import org.springframework.data.annotation.Id;

@@ -1,7 +1,7 @@
 package com.sepehr.telbot.controller;
 
 import com.sepehr.telbot.camel.CamelService;
-import com.sepehr.telbot.model.entity.AdminMessageModel;
+import com.sepehr.telbot.model.AdminMessageModel;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;

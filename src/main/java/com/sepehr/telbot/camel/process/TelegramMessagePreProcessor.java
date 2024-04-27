@@ -1,6 +1,6 @@
 package com.sepehr.telbot.camel.process;
 
-import com.sepehr.telbot.config.ApplicationConfiguration;
+import com.sepehr.telbot.model.AppIncomingReq;
 import com.sepehr.telbot.model.entity.ActiveChat;
 import com.sepehr.telbot.model.repo.ActiveChatRepository;
 import lombok.RequiredArgsConstructor;
@@ -22,28 +22,26 @@ public class TelegramMessagePreProcessor implements Processor {
 
     @Override
     public void process(Exchange exchange) {
-        int messageId;
-        String bodyMessage;
+        final var telegramIncomingReq = new AppIncomingReq();
         if (exchange.getMessage().getBody() instanceof IncomingCallbackQuery) { // when glass button is pressed
             final IncomingCallbackQuery callbackQuery = exchange.getMessage().getBody(IncomingCallbackQuery.class);
-            messageId = Integer.parseInt(String.valueOf(callbackQuery.getMessage().getMessageId()));
+            Integer messageId = Integer.parseInt(String.valueOf(callbackQuery.getMessage().getMessageId()));
             final String chatId = String.valueOf(callbackQuery.getMessage().getChat().getId());
-            bodyMessage = callbackQuery.getData();
+            String bodyMessage = callbackQuery.getData();
             exchange.getMessage().setHeader(TelegramConstants.TELEGRAM_CHAT_ID, chatId);
-            exchange.getMessage().setHeader(ApplicationConfiguration.BUTTON_RESPONSE, true);
+
+            telegramIncomingReq.setMessageId(messageId);
+            telegramIncomingReq.setBody(bodyMessage);
+            telegramIncomingReq.setIncomingCallbackQuery(callbackQuery);
         } else {
             final IncomingMessage incomingMessage = exchange.getMessage().getBody(IncomingMessage.class);
-            bodyMessage = incomingMessage.getText() != null ? incomingMessage.getText() : incomingMessage.getCaption();
-            messageId = exchange.getMessage().getBody(IncomingMessage.class).getMessageId().intValue();
-            exchange.getMessage().setHeader(ApplicationConfiguration.BUTTON_RESPONSE, false);
-            if (incomingMessage.getPhoto() != null) {
-                exchange.getMessage().setHeader(ApplicationConfiguration.FILE_ID, incomingMessage.getPhoto().get(
-                        incomingMessage.getPhoto().size() - 1
-                ).getFileId());
-            }
+            String bodyMessage = incomingMessage.getText() != null ? incomingMessage.getText() : incomingMessage.getCaption();
+            Integer messageId = exchange.getMessage().getBody(IncomingMessage.class).getMessageId().intValue();
+            telegramIncomingReq.setIncomingMessage(incomingMessage);
+            telegramIncomingReq.setBody(bodyMessage);
+            telegramIncomingReq.setMessageId(messageId);
         }
-        exchange.getMessage().setBody(bodyMessage);
-        exchange.getMessage().setHeader(ApplicationConfiguration.REPLY_MESSAGE_ID, messageId);
+        exchange.getMessage().setBody(telegramIncomingReq);
         exchange.getMessage().setHeader(TelegramConstants.TELEGRAM_PARSE_MODE, "MARKDOWN");
 
         final String chatId = exchange.getMessage().getHeader(TelegramConstants.TELEGRAM_CHAT_ID, String.class);

@@ -1,4 +1,4 @@
-package com.sepehr.telbot.model.entity;
+package com.sepehr.telbot.model;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;

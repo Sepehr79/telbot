@@ -1,7 +1,8 @@
 package com.sepehr.telbot.camel.process;
 
 import com.sepehr.telbot.config.ApplicationConfiguration;
-import com.sepehr.telbot.model.entity.Command;
+import com.sepehr.telbot.model.Command;
+import com.sepehr.telbot.model.AppIncomingReq;
 import org.apache.camel.Exchange;
 import org.apache.camel.Processor;
 import org.springframework.stereotype.Component;
@@ -12,9 +13,9 @@ import java.util.Arrays;
 public class RouteSelectProcessor implements Processor {
     @Override
     public void process(Exchange exchange) {
-        final String bodyMessage = exchange.getMessage().getBody(String.class);
+        final AppIncomingReq bodyMessage = exchange.getMessage().getBody(AppIncomingReq.class);
         String routeCommand = Arrays.stream(Command.values())
-                .filter(command -> bodyMessage.startsWith("/" + command.toString().toLowerCase()))
+                .filter(command -> bodyMessage.getBody().startsWith("/" + command.toString().toLowerCase()))
                 .findFirst()
                 .map(command -> command.toString().toLowerCase())
                 .orElse("chat");

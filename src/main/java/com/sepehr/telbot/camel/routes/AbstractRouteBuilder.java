@@ -1,6 +1,7 @@
 package com.sepehr.telbot.camel.routes;
 
 import com.sepehr.telbot.config.ApplicationConfiguration;
+import com.sepehr.telbot.model.AppIncomingReq;
 import org.apache.camel.Exchange;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.telegram.model.EditMessageTextMessage;
@@ -37,20 +38,18 @@ public abstract class AbstractRouteBuilder extends RouteBuilder {
     public abstract void configureOtherRoutes();
 
     public OutgoingMessage getOutGoingTextMessageBuilder(final Exchange exchange, final String text, final InlineKeyboardMarkup replyMarkup) {
-        final boolean buttonResponse = exchange.getMessage().getHeader(ApplicationConfiguration.BUTTON_RESPONSE, Boolean.class);
-        final Integer messageId = exchange.getMessage().getHeader(ApplicationConfiguration.REPLY_MESSAGE_ID, Integer.class);
-        if (buttonResponse) {
+        AppIncomingReq telegramIncomingReq = exchange.getMessage().getBody(AppIncomingReq.class);
+        if (telegramIncomingReq.getIncomingCallbackQuery() != null) {
             return EditMessageTextMessage.builder()
                     .text(text)
                     .replyMarkup(replyMarkup)
-                    .messageId(messageId)
+                    .messageId(telegramIncomingReq.getMessageId())
                     .build();
         }
         return OutgoingTextMessage.builder()
                 .text(text)
                 .replyMarkup(replyMarkup)
                 .build();
-
     }
 
 }
