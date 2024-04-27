@@ -71,6 +71,7 @@
 
         // Update Last Messages list
         var lastMessagesList = document.getElementById("lastMessagesList");
+        lastMessagesList.innerHTML = ""; // Clear existing messages
 
           for (var i = 0; i < responseData.messages.length; i++) {
             var messageItem = document.createElement("li");
