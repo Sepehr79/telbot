@@ -2,8 +2,9 @@ package com.sepehr.telbot.camel.routes;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.sepehr.telbot.config.ApplicationConfiguration;
-import com.sepehr.telbot.model.entity.GptMessage;
-import com.sepehr.telbot.model.entity.GptRequestBuilder;
+import com.sepehr.telbot.model.AppIncomingReq;
+import com.sepehr.telbot.model.GptMessage;
+import com.sepehr.telbot.model.GptRequestBuilder;
 import com.sepehr.telbot.model.entity.UserProfile;
 import com.sepehr.telbot.model.repo.UserProfileRepository;
 import io.vertx.core.http.HttpHeaders;
@@ -12,7 +13,6 @@ import org.apache.camel.component.telegram.TelegramConstants;
 import org.apache.camel.component.telegram.model.OutgoingTextMessage;
 import org.apache.camel.component.vertx.http.VertxHttpConstants;
 import org.apache.camel.model.dataformat.JsonLibrary;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.util.HashMap;
@@ -43,26 +43,26 @@ public class ChatGptRouteBuilder extends AbstractRouteBuilder {
                 .setHeader("Authorization", constant(applicationConfiguration.getOpenaiKey()))
                 .setHeader(HttpHeaders.USER_AGENT.toString(), constant("GPTtelbot"))
                 .process(exchange -> {
-                    final String body = exchange.getMessage().getBody(String.class);
+                    final var body = exchange.getMessage().getBody(AppIncomingReq.class);
                     final String chatId = exchange.getMessage().getHeader(TelegramConstants.TELEGRAM_CHAT_ID, String.class);
                     final UserProfile userProfile = userProfileRepository.findById(chatId).orElseGet(() ->
                             UserProfile.builder().id(chatId)
                                     .gptReq(gptRequestBuilder.createGptReq())
                                     .build());
-                    final GptMessage gptMessage = gptRequestBuilder.createUserMessage(body);
+                    final GptMessage gptMessage = gptRequestBuilder.createUserMessage(body.getBody());
                     userProfile.getGptReq().getMessages().add(gptMessage);
+                    exchange.getMessage().setHeader(ApplicationConfiguration.BODY_MESSAGE, body);
                     exchange.getMessage().setHeader(ApplicationConfiguration.USER_PROFILE, userProfile);
                     exchange.getMessage().setBody(userProfile.getGptReq());
                 })
                 .marshal().json(JsonLibrary.Jackson)
-                .removeHeader(ApplicationConfiguration.BODY_MESSAGE)
                 .to("log:chatGptFinalResult?showHeaders=true")
                 .to(applicationConfiguration.getChatGptUrl())
                 .to("log:chatGptAnswer?showHeaders=true")
                 .process(exchange -> {
                     JsonNode bodyResult = exchange.getMessage().getBody(JsonNode.class);
                     final String body = bodyResult.get("choices").get(0).get("message").get("content").asText();
-                    final Integer messageId = exchange.getMessage().getHeader(ApplicationConfiguration.REPLY_MESSAGE_ID, Integer.class);
+                    final Integer messageId = exchange.getMessage().getHeader(ApplicationConfiguration.BODY_MESSAGE, AppIncomingReq.class).getMessageId();
                     final UserProfile userProfile = exchange.getMessage().getHeader(ApplicationConfiguration.USER_PROFILE, UserProfile.class);
                     final String parseMode = exchange.getMessage().getHeader(TelegramConstants.TELEGRAM_PARSE_MODE, String.class);
                     userProfile.getGptReq().getMessages().add(gptRequestBuilder.createAssistantMessage(body));

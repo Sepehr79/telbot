@@ -9,6 +9,9 @@ public class ApplicationConfiguration {
     @Value("${camel.telegram.proxy.enable}")
     private boolean telegramProxyEnable;
 
+    @Value("${telegram.admin.chatId}")
+    private String adminId;
+
     @Value("${camel.telegram.proxy.config}")
     private String telegramProxyConfig;
 
@@ -30,6 +33,15 @@ public class ApplicationConfiguration {
     @Value("${telegram.chat.action.typing}")
     private String chatActionApi;
 
+    @Value("${spring.security.user.name}")
+    private String uiDefaultUser;
+
+    @Value("${spring.security.user.password}")
+    private String uiDefaultPassword;
+
+    @Value("${spring.redis.messages.ttl}")
+    private int messagesTtl;
+
     public static String REPLY_MESSAGE_ID = "MessageId";
 
     public static String ROUTE_SELECT = "route";
@@ -38,11 +50,17 @@ public class ApplicationConfiguration {
 
     public static String USER_PROFILE = "userProfile";
 
+    public static String LAST_MASSAGES = "lastMessages";
+
     public static String BODY_MESSAGE = "bodyMessage";
 
     public static String FILE_ID = "photoId";
 
     public static String PHOTO_PATH = "photoPath";
+
+    public String getAdminChatId() {
+        return adminId;
+    }
 
     public String getTelegramUri() {
         return "telegram:bots" + (telegramProxyEnable ? telegramProxyConfig : "");
@@ -54,6 +72,10 @@ public class ApplicationConfiguration {
 
     public String getOpenaiKey() {
         return openaiKey;
+    }
+
+    public int getMessagesTtl() {
+        return messagesTtl;
     }
 
     public String getFileIdApi(final String fileId) {
@@ -70,6 +92,14 @@ public class ApplicationConfiguration {
 
     public String getChatActionApi() {
         return chatActionApi;
+    }
+
+    public String getUiDefaultUser() {
+        return uiDefaultUser;
+    }
+
+    public String getUiDefaultPassword() {
+        return uiDefaultPassword;
     }
 
 }
