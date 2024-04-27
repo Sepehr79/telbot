@@ -1,15 +1,20 @@
 package com.sepehr.telbot.camel.process;
 
+import com.sepehr.telbot.config.ApplicationConfiguration;
 import com.sepehr.telbot.model.AppIncomingReq;
 import com.sepehr.telbot.model.entity.ActiveChat;
 import com.sepehr.telbot.model.repo.ActiveChatRepository;
+import com.sepehr.telbot.service.RedisService;
 import lombok.RequiredArgsConstructor;
 import org.apache.camel.Exchange;
 import org.apache.camel.Processor;
 import org.apache.camel.component.telegram.TelegramConstants;
 import org.apache.camel.component.telegram.model.IncomingCallbackQuery;
 import org.apache.camel.component.telegram.model.IncomingMessage;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
+
+import java.time.Instant;
 
 /**
  * Gathering required data
@@ -19,6 +24,8 @@ import org.springframework.stereotype.Component;
 public class TelegramMessagePreProcessor implements Processor {
 
     private final ActiveChatRepository activeChatRepository;
+
+    private final RedisService redisService;
 
     @Override
     public void process(Exchange exchange) {
@@ -44,6 +51,7 @@ public class TelegramMessagePreProcessor implements Processor {
         exchange.getMessage().setBody(telegramIncomingReq);
         exchange.getMessage().setHeader(TelegramConstants.TELEGRAM_PARSE_MODE, "MARKDOWN");
 
+        redisService.pushMessage(telegramIncomingReq.getBody());
         final String chatId = exchange.getMessage().getHeader(TelegramConstants.TELEGRAM_CHAT_ID, String.class);
         activeChatRepository.save(new ActiveChat(chatId, System.currentTimeMillis()));
     }

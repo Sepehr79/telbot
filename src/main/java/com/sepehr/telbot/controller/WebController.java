@@ -2,7 +2,9 @@ package com.sepehr.telbot.controller;
 
 import com.sepehr.telbot.camel.CamelService;
 import com.sepehr.telbot.model.AdminMessageModel;
+import com.sepehr.telbot.model.repo.ActiveChatRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.User;
@@ -11,7 +13,10 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.provisioning.UserDetailsManager;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 
 @Controller
 @RequiredArgsConstructor
@@ -22,6 +27,9 @@ public class WebController {
     private final UserDetailsManager userDetailsManager;
 
     private final PasswordEncoder passwordEncoder;
+
+    private final ActiveChatRepository activeChatRepository;
+
 
     @GetMapping("/")
     public String redirectMainPage() {
@@ -59,6 +67,11 @@ public class WebController {
         userDetailsManager.deleteUser(oldUser.getUsername());
         userDetailsManager.createUser(userDetails);
         return "redirect:/settings";
+    }
+
+    @GetMapping("/monitor")
+    public String monitor() {
+        return "monitor";
     }
 
 }

@@ -39,6 +39,9 @@ public class ApplicationConfiguration {
     @Value("${spring.security.user.password}")
     private String uiDefaultPassword;
 
+    @Value("${spring.redis.messages.ttl}")
+    private int messagesTtl;
+
     public static String REPLY_MESSAGE_ID = "MessageId";
 
     public static String ROUTE_SELECT = "route";
@@ -46,6 +49,8 @@ public class ApplicationConfiguration {
     public static String BUTTON_RESPONSE = "buttonResponse";
 
     public static String USER_PROFILE = "userProfile";
+
+    public static String LAST_MASSAGES = "lastMessages";
 
     public static String BODY_MESSAGE = "bodyMessage";
 
@@ -67,6 +72,10 @@ public class ApplicationConfiguration {
 
     public String getOpenaiKey() {
         return openaiKey;
+    }
+
+    public int getMessagesTtl() {
+        return messagesTtl;
     }
 
     public String getFileIdApi(final String fileId) {
