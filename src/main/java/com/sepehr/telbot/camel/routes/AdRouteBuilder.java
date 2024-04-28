@@ -60,6 +60,7 @@ public class AdRouteBuilder extends AbstractRouteBuilder {
                     exchange.getMessage().setBody(body);
                 })
                 .marshal().json(JsonLibrary.Jackson)
+                .removeHeader(ApplicationConfiguration.BODY_MESSAGE) // Necessary to prevent IllegalArgumentException
                 .setHeader(VertxHttpConstants.CONTENT_TYPE, constant("application/json"))
                 .setHeader(VertxHttpConstants.HTTP_METHOD, constant("POST"))
                 .to("vertx-http:" + applicationConfiguration.getPhotoSendApi())
