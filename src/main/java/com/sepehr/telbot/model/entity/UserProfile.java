@@ -18,4 +18,6 @@ public class UserProfile {
 
     private GptReq gptReq;
 
+    private long lastCall;
+
 }

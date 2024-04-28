@@ -42,6 +42,11 @@ public class ApplicationConfiguration {
     @Value("${spring.redis.messages.ttl}")
     private int messagesTtl;
 
+    @Value("${telegram.chat.period}")
+    private long chatPeriod;
+
+    public static String CHAT_PERIOD_PER = "chatPer";
+
     public static String REPLY_MESSAGE_ID = "MessageId";
 
     public static String ROUTE_SELECT = "route";
@@ -68,6 +73,10 @@ public class ApplicationConfiguration {
 
     public String getChatGptUrl() {
         return chatGptUrl;
+    }
+
+    public long getChatPeriod() {
+        return chatPeriod;
     }
 
     public String getOpenaiKey() {
