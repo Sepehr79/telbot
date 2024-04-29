@@ -39,22 +39,26 @@ public class ChatGptRouteBuilder extends AbstractRouteBuilder {
 
         from("direct:chat")
                 .to("seda:typingAction")
-                .setHeader(Exchange.CONTENT_TYPE, constant("application/json"))
-                .setHeader("Authorization", constant(applicationConfiguration.getOpenaiKey()))
-                .setHeader(HttpHeaders.USER_AGENT.toString(), constant("GPTtelbot"))
                 .process(exchange -> {
                     final var body = exchange.getMessage().getBody(AppIncomingReq.class);
                     final String chatId = exchange.getMessage().getHeader(TelegramConstants.TELEGRAM_CHAT_ID, String.class);
                     final UserProfile userProfile = userProfileRepository.findById(chatId).orElseGet(() ->
                             UserProfile.builder().id(chatId)
                                     .gptReq(gptRequestBuilder.createGptReq())
+                                    .lastCall(0)
                                     .build());
                     final GptMessage gptMessage = gptRequestBuilder.createUserMessage(body.getBody());
+                    if (System.currentTimeMillis() - userProfile.getLastCall() < applicationConfiguration.getChatPeriod())
+                        exchange.getMessage().setHeader(ApplicationConfiguration.CHAT_PERIOD_PER, true);
                     userProfile.getGptReq().getMessages().add(gptMessage);
                     exchange.getMessage().setHeader(ApplicationConfiguration.BODY_MESSAGE, body);
                     exchange.getMessage().setHeader(ApplicationConfiguration.USER_PROFILE, userProfile);
                     exchange.getMessage().setBody(userProfile.getGptReq());
                 })
+                .choice().when(exchange -> exchange.getMessage().getHeaders().containsKey(ApplicationConfiguration.CHAT_PERIOD_PER)).to("direct:per").end()
+                .setHeader(Exchange.CONTENT_TYPE, constant("application/json"))
+                .setHeader("Authorization", constant(applicationConfiguration.getOpenaiKey()))
+                .setHeader(HttpHeaders.USER_AGENT.toString(), constant("GPTtelbot"))
                 .marshal().json(JsonLibrary.Jackson)
                 .to("log:chatGptFinalResult?showHeaders=true")
                 .to(applicationConfiguration.getChatGptUrl())
@@ -66,6 +70,7 @@ public class ChatGptRouteBuilder extends AbstractRouteBuilder {
                     final UserProfile userProfile = exchange.getMessage().getHeader(ApplicationConfiguration.USER_PROFILE, UserProfile.class);
                     final String parseMode = exchange.getMessage().getHeader(TelegramConstants.TELEGRAM_PARSE_MODE, String.class);
                     userProfile.getGptReq().getMessages().add(gptRequestBuilder.createAssistantMessage(body));
+                    userProfile.setLastCall(System.currentTimeMillis());
                     userProfileRepository.save(userProfile);
 
                     final OutgoingTextMessage outMessage = OutgoingTextMessage.builder()
@@ -91,6 +96,17 @@ public class ChatGptRouteBuilder extends AbstractRouteBuilder {
                 .to(applicationConfiguration.getChatActionApi())
         ;
 
+        from("direct:per")
+                .process(exchange -> {
+                    final long lastCall      = exchange.getMessage().getHeader(ApplicationConfiguration.USER_PROFILE, UserProfile.class).getLastCall();
+                    final long period        = applicationConfiguration.getChatPeriod();
+                    final long remainingTime = period - (System.currentTimeMillis() - lastCall);
+                    exchange.getMessage().setBody(
+                            String.format("شما هر %d ثانیه مجاز به ارسال یک پیام هستید." +
+                                    "لطفا %d ثانیه دیگر امتحان کنید.",
+                                    period / 1000,
+                                    remainingTime / 1000));
+                }).to(applicationConfiguration.getTelegramUri()).stop();
 
     }
 }
