@@ -7,6 +7,7 @@ import org.springframework.stereotype.Component;
 
 import java.time.Instant;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Component
 @RequiredArgsConstructor
@@ -19,19 +20,22 @@ public class RedisService {
     private static String MESSAGES_BUCKET = "messagesBucket";
 
     public void pushMessage(final String message) {
-        UUID uuid = UUID.randomUUID();
-        final String key = MESSAGES_BUCKET + uuid.toString();
+        final String key = MESSAGES_BUCKET + System.currentTimeMillis();
         redisTemplate.opsForValue().append(key, message);
         redisTemplate.expireAt(key, Instant.now().plusSeconds(applicationConfiguration.getMessagesTtl()));
     }
 
     public List<String> getMessages() {
-        Set<String> keys = redisTemplate.keys(MESSAGES_BUCKET + "*");
-        if (keys == null)
-            keys = new HashSet<>();
+        Set<String> ids = redisTemplate.keys(MESSAGES_BUCKET + "*");
+        if (ids == null)
+            ids = new HashSet<>();
+        List<Long> timestamps = ids.stream().map(s -> s.replace(MESSAGES_BUCKET, ""))
+                .map(Long::parseLong)
+                .sorted()
+                .collect(Collectors.toList());
         List<String> texts = new ArrayList<>();
-        for (String key: keys) {
-            texts.add(redisTemplate.opsForValue().get(key));
+        for (int i = ids.size() - 1; i >= 0; i--) {
+            texts.add(redisTemplate.opsForValue().get(MESSAGES_BUCKET + timestamps.get(i)));
         }
         return texts;
     }
