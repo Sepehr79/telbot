@@ -51,7 +51,7 @@ public class ChatGptRouteBuilder extends AbstractRouteBuilder {
                     if (System.currentTimeMillis() - userProfile.getLastCall() < applicationConfiguration.getChatPeriod())
                         exchange.getMessage().setHeader(ApplicationConfiguration.CHAT_PERIOD_PER, true);
                     userProfile.getGptReq().getMessages().add(gptMessage);
-                    exchange.getMessage().setHeader(ApplicationConfiguration.BODY_MESSAGE, body);
+                    exchange.getMessage().setHeader(ApplicationConfiguration.BODY_MESSAGE, body.getMessageId());
                     exchange.getMessage().setHeader(ApplicationConfiguration.USER_PROFILE, userProfile);
                     exchange.getMessage().setBody(userProfile.getGptReq());
                 })
@@ -66,7 +66,7 @@ public class ChatGptRouteBuilder extends AbstractRouteBuilder {
                 .process(exchange -> {
                     JsonNode bodyResult = exchange.getMessage().getBody(JsonNode.class);
                     final String body = bodyResult.get("choices").get(0).get("message").get("content").asText();
-                    final Integer messageId = exchange.getMessage().getHeader(ApplicationConfiguration.BODY_MESSAGE, AppIncomingReq.class).getMessageId();
+                    final Integer messageId = exchange.getMessage().getHeader(ApplicationConfiguration.BODY_MESSAGE, Integer.class);
                     final UserProfile userProfile = exchange.getMessage().getHeader(ApplicationConfiguration.USER_PROFILE, UserProfile.class);
                     final String parseMode = exchange.getMessage().getHeader(TelegramConstants.TELEGRAM_PARSE_MODE, String.class);
                     userProfile.getGptReq().getMessages().add(gptRequestBuilder.createAssistantMessage(body));
