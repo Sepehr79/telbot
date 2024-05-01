@@ -28,9 +28,6 @@ public class WebController {
 
     private final PasswordEncoder passwordEncoder;
 
-    private final ActiveChatRepository activeChatRepository;
-
-
     @GetMapping("/")
     public String redirectMainPage() {
         return "redirect:/index";
