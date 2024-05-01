@@ -2,6 +2,7 @@ package com.sepehr.telbot.camel.process;
 
 import com.sepehr.telbot.config.ApplicationConfiguration;
 import com.sepehr.telbot.model.AppIncomingReq;
+import com.sepehr.telbot.model.Command;
 import com.sepehr.telbot.model.entity.ActiveChat;
 import com.sepehr.telbot.model.repo.ActiveChatRepository;
 import com.sepehr.telbot.service.RedisService;
@@ -25,8 +26,6 @@ public class TelegramMessagePreProcessor implements Processor {
 
     private final ActiveChatRepository activeChatRepository;
 
-    private final RedisService redisService;
-
     @Override
     public void process(Exchange exchange) {
         final var telegramIncomingReq = new AppIncomingReq();
@@ -42,7 +41,9 @@ public class TelegramMessagePreProcessor implements Processor {
             telegramIncomingReq.setIncomingCallbackQuery(callbackQuery);
         } else {
             final IncomingMessage incomingMessage = exchange.getMessage().getBody(IncomingMessage.class);
-            String bodyMessage = incomingMessage.getText() != null ? incomingMessage.getText() : incomingMessage.getCaption();
+            String bodyMessage = incomingMessage.getText();
+            if (bodyMessage == null)
+                bodyMessage = "/" + Command.VOICE.toString().toLowerCase();
             Integer messageId = exchange.getMessage().getBody(IncomingMessage.class).getMessageId().intValue();
             telegramIncomingReq.setIncomingMessage(incomingMessage);
             telegramIncomingReq.setBody(bodyMessage);
@@ -51,7 +52,6 @@ public class TelegramMessagePreProcessor implements Processor {
         exchange.getMessage().setBody(telegramIncomingReq);
         exchange.getMessage().setHeader(TelegramConstants.TELEGRAM_PARSE_MODE, "MARKDOWN");
 
-        redisService.pushMessage(telegramIncomingReq.getBody());
         final String chatId = exchange.getMessage().getHeader(TelegramConstants.TELEGRAM_CHAT_ID, String.class);
         activeChatRepository.save(new ActiveChat(chatId, System.currentTimeMillis()));
     }

@@ -19,6 +19,10 @@ public abstract class AbstractRouteBuilder extends RouteBuilder {
     }
 
     public void configure() {
+        onException(Exception.class)
+                .to("log:exc?showHeaders=true")
+                .stop();
+
         onException(HttpOperationFailedException.class)
                 .handled(true)
                 .useOriginalMessage()

@@ -18,6 +18,15 @@ public class ApplicationConfiguration {
     @Value("${openai.url}")
     private String chatGptUrl;
 
+    @Value("${openai.voice-to-text.url}")
+    private String voiceToTextUrl;
+
+    @Value("${replicate.url}")
+    private String replicateUrl;
+
+    @Value("${replicate.apikey}")
+    private String replicateKey;
+
     @Value("${openai.apikey}")
     private String openaiKey;
 
@@ -59,7 +68,9 @@ public class ApplicationConfiguration {
 
     public static String BODY_MESSAGE = "bodyMessage";
 
-    public static String FILE_ID = "photoId";
+    public static String FILE_ID = "fileId";
+
+    public static String FILE_PATH = "filePath";
 
     public static String PHOTO_PATH = "photoPath";
 
@@ -81,6 +92,14 @@ public class ApplicationConfiguration {
 
     public String getOpenaiKey() {
         return openaiKey;
+    }
+
+    public String getReplicateUrl() {
+        return this.replicateUrl;
+    }
+
+    public String getReplicateKey() {
+        return this.replicateKey;
     }
 
     public int getMessagesTtl() {
@@ -109,6 +128,10 @@ public class ApplicationConfiguration {
 
     public String getUiDefaultPassword() {
         return uiDefaultPassword;
+    }
+
+    public String getVoiceToTextUrl() {
+        return voiceToTextUrl;
     }
 
 }

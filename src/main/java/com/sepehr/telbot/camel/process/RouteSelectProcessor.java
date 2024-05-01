@@ -18,7 +18,7 @@ public class RouteSelectProcessor implements Processor {
                 .filter(command -> bodyMessage.getBody().startsWith("/" + command.toString().toLowerCase()))
                 .findFirst()
                 .map(command -> command.toString().toLowerCase())
-                .orElse("chat");
+                .orElse(Command.CHAT.toString().toLowerCase());
         exchange.getMessage().setHeader(ApplicationConfiguration.ROUTE_SELECT, routeCommand);
     }
 }

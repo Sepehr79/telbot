@@ -16,4 +16,6 @@ public class AppIncomingReq {
     private Integer messageId;
 
     private String photoUrl;
+
+    private String chatId;
 }

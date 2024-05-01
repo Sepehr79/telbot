@@ -10,6 +10,8 @@ public enum Command {
     START,
     DONATE,
     VERSION,
+    CHAT,
+    VOICE
     ;
 
 
