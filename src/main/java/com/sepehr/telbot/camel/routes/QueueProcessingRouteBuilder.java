@@ -48,10 +48,17 @@ public class QueueProcessingRouteBuilder extends AbstractRouteBuilder {
                         incomingReq.setBody(text);
                         incomingReq.setMessageId(voiceToTextModel.getMessageId());
                         exchange.getMessage().setBody(incomingReq);
+                    } else if (queueService.peekVoiceToTextModel() != null &&
+                            queueService.peekVoiceToTextModel().getCreatedAt() - System.currentTimeMillis() >= 80000) {
+                        queueService.pollVoiceToTextModel();
+                        exchange.getMessage().setHeader("voiceUnavailable", true);
                     }
                 })
                 .choice().when(exchange -> exchange.getMessage().getBody() instanceof AppIncomingReq)
                 .to("direct:chat")
+                .to(applicationConfiguration.getTelegramUri())
+                .when(exchange -> exchange.getMessage().getHeaders().containsKey("voiceUnavailable"))
+                .process(exchange -> exchange.getMessage().setBody("درحال حاضر امکان پردازش صوت وجود ندارد. لطفا بعدا امتحان کنید."))
                 .to(applicationConfiguration.getTelegramUri())
                 .end()
                 ;

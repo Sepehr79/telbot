@@ -11,4 +11,6 @@ public class VoiceToTextModel {
 
     private final Integer messageId;
 
+    private final long createdAt;
+
 }
