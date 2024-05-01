@@ -15,7 +15,8 @@ public class RouteSelectProcessor implements Processor {
     public void process(Exchange exchange) {
         final AppIncomingReq bodyMessage = exchange.getMessage().getBody(AppIncomingReq.class);
         final String routeCommand;
-        if (bodyMessage.getIncomingMessage().getAudio() != null)
+        if (bodyMessage.getIncomingMessage() != null &&
+                bodyMessage.getIncomingMessage().getAudio() != null)
             routeCommand = Command.VOICE.toString().toLowerCase();
         else {
             routeCommand = Arrays.stream(Command.values())

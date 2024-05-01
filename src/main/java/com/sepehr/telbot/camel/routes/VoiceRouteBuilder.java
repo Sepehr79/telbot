@@ -84,7 +84,7 @@ public class VoiceRouteBuilder extends AbstractRouteBuilder {
                     String getUrl = body.get("urls").get("get").asText();
                     final String chatId = exchange.getMessage().getHeader(TelegramConstants.TELEGRAM_CHAT_ID, String.class);
                     final Integer messageId = exchange.getMessage().getHeader(ApplicationConfiguration.REPLY_MESSAGE_ID, Integer.class);
-                    queueService.appendVoiceToTextModel(new VoiceToTextModel(getUrl, chatId, messageId));
+                    queueService.appendVoiceToTextModel(new VoiceToTextModel(getUrl, chatId, messageId, System.currentTimeMillis()));
                 })
         ;
     }
