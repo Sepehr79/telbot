@@ -7,6 +7,7 @@ import com.sepehr.telbot.model.VoiceToTextModel;
 import com.sepehr.telbot.service.QueueService;
 import org.apache.camel.Exchange;
 import org.apache.camel.component.telegram.TelegramConstants;
+import org.apache.camel.component.telegram.model.OutgoingTextMessage;
 import org.apache.camel.component.vertx.http.VertxHttpConstants;
 import org.apache.camel.model.dataformat.JsonLibrary;
 import org.springframework.stereotype.Component;
@@ -37,6 +38,25 @@ public class VoiceRouteBuilder extends AbstractRouteBuilder {
                     exchange.getMessage().setHeader(ApplicationConfiguration.FILE_ID, fileId);
                     exchange.getMessage().setHeader(ApplicationConfiguration.REPLY_MESSAGE_ID, messageId);
                 })
+                .choice()
+                .when(exchange ->
+                        exchange.getMessage().getBody(AppIncomingReq.class)
+                                .getIncomingMessage()
+                                .getAudio().getDurationSeconds()
+                                <= applicationConfiguration.getVoiceMaxLength())
+                .to("direct:sendVoice")
+                .stop()
+                .otherwise()
+                .process(exchange -> {
+                    final Integer messageId = exchange.getMessage().getHeader(ApplicationConfiguration.REPLY_MESSAGE_ID, Integer.class);
+                    OutgoingTextMessage outgoingTextMessage = new OutgoingTextMessage();
+                    outgoingTextMessage.setReplyToMessageId(Long.valueOf(messageId));
+                    outgoingTextMessage.setText(String.format("لطفا توجه داشته باشید که پیام صوتی شما " +
+                            "باید حداکثر %d ثانیه باشد.", applicationConfiguration.getVoiceMaxLength()));
+                    exchange.getMessage().setBody(outgoingTextMessage);
+                });
+
+        from("direct:sendVoice")
                 .removeHeader(ApplicationConfiguration.BODY_MESSAGE) // Necessary to prevent IllegalArgumentException
                 .setHeader(VertxHttpConstants.CONTENT_TYPE, constant("application/json"))
                 .setHeader(VertxHttpConstants.HTTP_METHOD, constant("GET"))
@@ -63,8 +83,6 @@ public class VoiceRouteBuilder extends AbstractRouteBuilder {
                     final Integer messageId = exchange.getMessage().getHeader(ApplicationConfiguration.REPLY_MESSAGE_ID, Integer.class);
                     queueService.appendVoiceToTextModel(new VoiceToTextModel(getUrl, chatId, messageId));
                 })
-                .stop()
-
         ;
     }
 }

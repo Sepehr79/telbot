@@ -75,7 +75,6 @@ public class ChatGptRouteBuilder extends AbstractRouteBuilder {
                     final String body = bodyResult.get("choices").get(0).get("message").get("content").asText();
                     final Integer messageId = exchange.getMessage().getHeader(ApplicationConfiguration.BODY_MESSAGE, Integer.class);
                     final UserProfile userProfile = exchange.getMessage().getHeader(ApplicationConfiguration.USER_PROFILE, UserProfile.class);
-                    final String parseMode = exchange.getMessage().getHeader(TelegramConstants.TELEGRAM_PARSE_MODE, String.class);
                     userProfile.getGptReq().getMessages().add(gptRequestBuilder.createAssistantMessage(body));
                     userProfile.setLastCall(System.currentTimeMillis());
                     userProfileRepository.save(userProfile);
@@ -84,7 +83,7 @@ public class ChatGptRouteBuilder extends AbstractRouteBuilder {
                             .text(body)
                             .build();
                     outMessage.setReplyToMessageId(messageId.longValue());
-                    outMessage.setParseMode(parseMode);
+                    outMessage.setParseMode("markdown");
 
                     exchange.getMessage().setBody(outMessage);
                 });

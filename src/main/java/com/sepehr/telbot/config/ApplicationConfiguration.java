@@ -45,6 +45,9 @@ public class ApplicationConfiguration {
     @Value("${spring.security.user.name}")
     private String uiDefaultUser;
 
+    @Value("${replicate.max-length}")
+    private Integer voiceMaxLength;
+
     @Value("${spring.security.user.password}")
     private String uiDefaultPassword;
 
@@ -92,6 +95,10 @@ public class ApplicationConfiguration {
 
     public String getOpenaiKey() {
         return openaiKey;
+    }
+
+    public Integer getVoiceMaxLength() {
+        return voiceMaxLength;
     }
 
     public String getReplicateUrl() {
