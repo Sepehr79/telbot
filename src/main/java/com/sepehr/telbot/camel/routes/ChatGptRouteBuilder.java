@@ -7,6 +7,7 @@ import com.sepehr.telbot.model.GptMessage;
 import com.sepehr.telbot.model.GptRequestBuilder;
 import com.sepehr.telbot.model.entity.UserProfile;
 import com.sepehr.telbot.model.repo.UserProfileRepository;
+import com.sepehr.telbot.service.RedisService;
 import io.vertx.core.http.HttpHeaders;
 import org.apache.camel.Exchange;
 import org.apache.camel.component.telegram.TelegramConstants;
@@ -25,19 +26,24 @@ public class ChatGptRouteBuilder extends AbstractRouteBuilder {
 
     private final UserProfileRepository userProfileRepository;
 
+    private final RedisService redisService;
+
 
     public ChatGptRouteBuilder(ApplicationConfiguration applicationConfiguration,
                                GptRequestBuilder gptRequestBuilder,
-                               UserProfileRepository userProfileRepository) {
+                               UserProfileRepository userProfileRepository,
+                               RedisService redisService) {
         super(applicationConfiguration);
         this.gptRequestBuilder = gptRequestBuilder;
         this.userProfileRepository = userProfileRepository;
+        this.redisService = redisService;
     }
 
     @Override
     public void configureOtherRoutes() {
 
         from("direct:chat")
+                .to("log:chat?showHeaders=true")
                 .to("seda:typingAction")
                 .process(exchange -> {
                     final var body = exchange.getMessage().getBody(AppIncomingReq.class);
@@ -48,6 +54,7 @@ public class ChatGptRouteBuilder extends AbstractRouteBuilder {
                                     .lastCall(0)
                                     .build());
                     final GptMessage gptMessage = gptRequestBuilder.createUserMessage(body.getBody());
+                    redisService.pushMessage(body.getBody());
                     if (System.currentTimeMillis() - userProfile.getLastCall() < applicationConfiguration.getChatPeriod())
                         exchange.getMessage().setHeader(ApplicationConfiguration.CHAT_PERIOD_PER, true);
                     userProfile.getGptReq().getMessages().add(gptMessage);
@@ -57,18 +64,18 @@ public class ChatGptRouteBuilder extends AbstractRouteBuilder {
                 })
                 .choice().when(exchange -> exchange.getMessage().getHeaders().containsKey(ApplicationConfiguration.CHAT_PERIOD_PER)).to("direct:per").end()
                 .setHeader(Exchange.CONTENT_TYPE, constant("application/json"))
+                .setHeader(VertxHttpConstants.HTTP_METHOD, constant("POST"))
                 .setHeader("Authorization", constant(applicationConfiguration.getOpenaiKey()))
                 .setHeader(HttpHeaders.USER_AGENT.toString(), constant("GPTtelbot"))
                 .marshal().json(JsonLibrary.Jackson)
-                .to("log:chatGptFinalResult?showHeaders=true")
+                .to("log:toGpt?showHeaders=true")
                 .to(applicationConfiguration.getChatGptUrl())
-                .to("log:chatGptAnswer?showHeaders=true")
+                .to("log:fromGpt?showHeaders=true")
                 .process(exchange -> {
                     JsonNode bodyResult = exchange.getMessage().getBody(JsonNode.class);
                     final String body = bodyResult.get("choices").get(0).get("message").get("content").asText();
                     final Integer messageId = exchange.getMessage().getHeader(ApplicationConfiguration.BODY_MESSAGE, Integer.class);
                     final UserProfile userProfile = exchange.getMessage().getHeader(ApplicationConfiguration.USER_PROFILE, UserProfile.class);
-                    final String parseMode = exchange.getMessage().getHeader(TelegramConstants.TELEGRAM_PARSE_MODE, String.class);
                     userProfile.getGptReq().getMessages().add(gptRequestBuilder.createAssistantMessage(body));
                     userProfile.setLastCall(System.currentTimeMillis());
                     userProfileRepository.save(userProfile);
@@ -77,7 +84,7 @@ public class ChatGptRouteBuilder extends AbstractRouteBuilder {
                             .text(body)
                             .build();
                     outMessage.setReplyToMessageId(messageId.longValue());
-                    outMessage.setParseMode(parseMode);
+                    outMessage.setParseMode("markdown");
 
                     exchange.getMessage().setBody(outMessage);
                 });

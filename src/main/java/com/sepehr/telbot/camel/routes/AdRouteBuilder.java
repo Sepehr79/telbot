@@ -29,7 +29,6 @@ public class AdRouteBuilder extends AbstractRouteBuilder {
     @Override
     public void configureOtherRoutes() {
         from("direct:ad")
-                .end()
                 .to("log:ad?showHeaders=true")
                 .process(exchange -> {
                     final AppIncomingReq body = exchange.getMessage().getBody(AppIncomingReq.class);

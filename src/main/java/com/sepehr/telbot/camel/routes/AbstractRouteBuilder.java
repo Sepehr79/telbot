@@ -3,6 +3,7 @@ package com.sepehr.telbot.camel.routes;
 import com.sepehr.telbot.config.ApplicationConfiguration;
 import com.sepehr.telbot.model.AppIncomingReq;
 import org.apache.camel.Exchange;
+import org.apache.camel.RuntimeCamelException;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.telegram.model.EditMessageTextMessage;
 import org.apache.camel.component.telegram.model.InlineKeyboardMarkup;
@@ -19,6 +20,11 @@ public abstract class AbstractRouteBuilder extends RouteBuilder {
     }
 
     public void configure() {
+        onException(RuntimeCamelException.class)
+                .handled(true)
+                .useOriginalMessage()
+                .to("log:exc?showHeaders=true");
+
         onException(HttpOperationFailedException.class)
                 .handled(true)
                 .useOriginalMessage()
