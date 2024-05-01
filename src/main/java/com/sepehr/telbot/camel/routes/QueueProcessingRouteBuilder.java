@@ -24,6 +24,7 @@ public class QueueProcessingRouteBuilder extends AbstractRouteBuilder {
     public void configureOtherRoutes() {
         from("timer:queue?period=500")
                 .choice().when(exchange -> queueService.peekVoiceToTextModel() != null)
+                .to("log:incomeQueue")
                 .process(exchange -> {
                     VoiceToTextModel voiceToTextModel = queueService.peekVoiceToTextModel();
                     final String filePath = voiceToTextModel.getGetUrl();
@@ -34,7 +35,9 @@ public class QueueProcessingRouteBuilder extends AbstractRouteBuilder {
                 .setBody(simple(null))
                 .setHeader("Authorization", constant(applicationConfiguration.getReplicateKey()))
                 .setHeader(VertxHttpConstants.HTTP_METHOD, constant("GET"))
+                .to("log:toReplicateSpeechToText")
                 .toD("vertx-http:${header.filePath}")
+                .to("log:fromReplicateSpeechToText")
                 .process(exchange -> {
                     JsonNode body = exchange.getMessage().getBody(JsonNode.class);
                     final String status = body.get("status").asText();

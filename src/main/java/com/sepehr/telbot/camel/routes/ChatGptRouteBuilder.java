@@ -43,6 +43,7 @@ public class ChatGptRouteBuilder extends AbstractRouteBuilder {
     public void configureOtherRoutes() {
 
         from("direct:chat")
+                .to("log:chat?showHeaders=true")
                 .to("seda:typingAction")
                 .process(exchange -> {
                     final var body = exchange.getMessage().getBody(AppIncomingReq.class);
@@ -67,9 +68,9 @@ public class ChatGptRouteBuilder extends AbstractRouteBuilder {
                 .setHeader("Authorization", constant(applicationConfiguration.getOpenaiKey()))
                 .setHeader(HttpHeaders.USER_AGENT.toString(), constant("GPTtelbot"))
                 .marshal().json(JsonLibrary.Jackson)
-                .to("log:chatGptFinalResult?showHeaders=true")
+                .to("log:toGpt?showHeaders=true")
                 .to(applicationConfiguration.getChatGptUrl())
-                .to("log:chatGptAnswer?showHeaders=true")
+                .to("log:fromGpt?showHeaders=true")
                 .process(exchange -> {
                     JsonNode bodyResult = exchange.getMessage().getBody(JsonNode.class);
                     final String body = bodyResult.get("choices").get(0).get("message").get("content").asText();

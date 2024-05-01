@@ -18,6 +18,7 @@ public class MenuRouteBuilder extends AbstractRouteBuilder {
     @Override
     public void configureOtherRoutes() {
         from("direct:start")
+                .to("log:startMenu?showHeaders=true")
                 .process(exchange -> {
                     final InlineKeyboardMarkup replyKeyboardMarkup =
                             InlineKeyboardMarkup.builder()

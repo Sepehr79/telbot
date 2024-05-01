@@ -1,21 +1,16 @@
 package com.sepehr.telbot.camel.process;
 
-import com.sepehr.telbot.config.ApplicationConfiguration;
 import com.sepehr.telbot.model.AppIncomingReq;
 import com.sepehr.telbot.model.Command;
 import com.sepehr.telbot.model.entity.ActiveChat;
 import com.sepehr.telbot.model.repo.ActiveChatRepository;
-import com.sepehr.telbot.service.RedisService;
 import lombok.RequiredArgsConstructor;
 import org.apache.camel.Exchange;
 import org.apache.camel.Processor;
 import org.apache.camel.component.telegram.TelegramConstants;
 import org.apache.camel.component.telegram.model.IncomingCallbackQuery;
 import org.apache.camel.component.telegram.model.IncomingMessage;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
-
-import java.time.Instant;
 
 /**
  * Gathering required data
@@ -41,16 +36,13 @@ public class TelegramMessagePreProcessor implements Processor {
             telegramIncomingReq.setIncomingCallbackQuery(callbackQuery);
         } else {
             final IncomingMessage incomingMessage = exchange.getMessage().getBody(IncomingMessage.class);
-            String bodyMessage = incomingMessage.getText();
-            if (bodyMessage == null)
-                bodyMessage = "/" + Command.VOICE.toString().toLowerCase();
+            String bodyMessage = incomingMessage.getText() != null ? incomingMessage.getText() : "";
             Integer messageId = exchange.getMessage().getBody(IncomingMessage.class).getMessageId().intValue();
             telegramIncomingReq.setIncomingMessage(incomingMessage);
             telegramIncomingReq.setBody(bodyMessage);
             telegramIncomingReq.setMessageId(messageId);
         }
         exchange.getMessage().setBody(telegramIncomingReq);
-        exchange.getMessage().setHeader(TelegramConstants.TELEGRAM_PARSE_MODE, "MARKDOWN");
 
         final String chatId = exchange.getMessage().getHeader(TelegramConstants.TELEGRAM_CHAT_ID, String.class);
         activeChatRepository.save(new ActiveChat(chatId, System.currentTimeMillis()));

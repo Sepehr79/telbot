@@ -2,9 +2,7 @@ package com.sepehr.telbot.controller;
 
 import com.sepehr.telbot.camel.CamelService;
 import com.sepehr.telbot.model.AdminMessageModel;
-import com.sepehr.telbot.model.repo.ActiveChatRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.User;

@@ -47,6 +47,7 @@ public class VoiceRouteBuilder extends AbstractRouteBuilder {
                 .to("direct:sendVoice")
                 .stop()
                 .otherwise()
+                .to("log:longVoice?showHeaders=true")
                 .process(exchange -> {
                     final Integer messageId = exchange.getMessage().getHeader(ApplicationConfiguration.REPLY_MESSAGE_ID, Integer.class);
                     OutgoingTextMessage outgoingTextMessage = new OutgoingTextMessage();
@@ -61,6 +62,7 @@ public class VoiceRouteBuilder extends AbstractRouteBuilder {
                 .setHeader(VertxHttpConstants.CONTENT_TYPE, constant("application/json"))
                 .setHeader(VertxHttpConstants.HTTP_METHOD, constant("GET"))
                 .setBody(simple(null))
+                .to("log:getVoicePath?showHeaders=true")
                 .toD("vertx-http:" + applicationConfiguration.getFileIdApi("${header.fileId}")) // Get telegram filePath
                 .process(exchange -> {
                     JsonNode result = exchange.getMessage().getBody(JsonNode.class);
@@ -75,6 +77,7 @@ public class VoiceRouteBuilder extends AbstractRouteBuilder {
                 .setHeader("Authorization", constant(applicationConfiguration.getReplicateKey()))
                 .setHeader(VertxHttpConstants.HTTP_METHOD, constant("POST"))
                 .marshal().json(JsonLibrary.Jackson)
+                .to("log:replicateSpeechToTextStart?showHeaders=true")
                 .to("vertx-http:" + applicationConfiguration.getReplicateUrl()) // translate voice to text
                 .process(exchange -> {
                     JsonNode body = exchange.getMessage().getBody(JsonNode.class);

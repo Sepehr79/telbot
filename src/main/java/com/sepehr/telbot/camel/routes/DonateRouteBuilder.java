@@ -15,6 +15,7 @@ public class DonateRouteBuilder extends AbstractRouteBuilder {
     @Override
     public void configureOtherRoutes() {
         from("direct:donate")
+                .to("log:donate?showHeaders=true")
                 .process(exchange -> {
                     String chatId = exchange.getMessage().getHeader(TelegramConstants.TELEGRAM_CHAT_ID, String.class);
                     OutgoingTextMessage outgoingMessage = OutgoingTextMessage.builder()

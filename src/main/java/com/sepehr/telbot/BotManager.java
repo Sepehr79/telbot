@@ -31,7 +31,7 @@ public class BotManager extends RouteBuilder {
     @Override
     public void configure() {
         from(applicationConfiguration.getTelegramUri())
-                .to("log:in?showHeaders=true")
+                .to("log:telegramIn?showHeaders=true")
                 .process(telegramMessagePreProcessor).id(TelegramMessagePreProcessor.class.getSimpleName())
                 .process(routeSelectProcessor).id(RouteSelectProcessor.class.getSimpleName())
                 .choice()
@@ -39,7 +39,7 @@ public class BotManager extends RouteBuilder {
                     .process(groupCommandProcessor).id(GroupCommandProcessor.class.getSimpleName())
                 .end()
                 .toD("direct:${header.route}", true)
-                .to("log:telegramFinalResult?showHeaders=true")
+                .to("log:telegramOut?showHeaders=true")
                 .to(applicationConfiguration.getTelegramUri());
 
         from("direct:version")
