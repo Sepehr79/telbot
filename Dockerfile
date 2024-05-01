@@ -10,7 +10,6 @@ FROM openjdk:11-jdk-slim
 
 WORKDIR ./app
 
-COPY --from=builder ./builder/target/* app.jar
-COPY --from=builder ./builder/lib/camel-telegram-3.18.9.jar ./lib/camel-telegram-3.18.9.jar
+COPY --from=builder ./builder/* .
 
-CMD ["java", "-jar", "app.jar"]
+CMD ["java", "-jar", "./target/telbot-1.0.0-SNAPSHOT.jar"]
