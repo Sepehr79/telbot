@@ -41,7 +41,7 @@ public class VoiceRouteBuilder extends AbstractRouteBuilder {
                 .setHeader(VertxHttpConstants.CONTENT_TYPE, constant("application/json"))
                 .setHeader(VertxHttpConstants.HTTP_METHOD, constant("GET"))
                 .setBody(simple(null))
-                .toD("vertx-http:" + applicationConfiguration.getFileIdApi("${header.fileId}"))
+                .toD("vertx-http:" + applicationConfiguration.getFileIdApi("${header.fileId}")) // Get telegram filePath
                 .process(exchange -> {
                     JsonNode result = exchange.getMessage().getBody(JsonNode.class);
                     String filePath = result.get("result").get("file_path").asText();
@@ -55,24 +55,16 @@ public class VoiceRouteBuilder extends AbstractRouteBuilder {
                 .setHeader("Authorization", constant(applicationConfiguration.getReplicateKey()))
                 .setHeader(VertxHttpConstants.HTTP_METHOD, constant("POST"))
                 .marshal().json(JsonLibrary.Jackson)
-                .to("vertx-http:" + applicationConfiguration.getReplicateUrl())
+                .to("vertx-http:" + applicationConfiguration.getReplicateUrl()) // translate voice to text
                 .process(exchange -> {
                     JsonNode body = exchange.getMessage().getBody(JsonNode.class);
                     String getUrl = body.get("urls").get("get").asText();
-                    exchange.getMessage().setHeader(ApplicationConfiguration.FILE_PATH, getUrl);
-                })
-                .setBody(simple(null))
-                .setHeader("Authorization", constant(applicationConfiguration.getReplicateKey()))
-                .setHeader(VertxHttpConstants.HTTP_METHOD, constant("GET"))
-                .toD("vertx-http:${header.filePath}")
-                .process(exchange -> {
-                    final String getUrl = exchange.getMessage().getHeader(ApplicationConfiguration.FILE_PATH, String.class);
                     final String chatId = exchange.getMessage().getHeader(TelegramConstants.TELEGRAM_CHAT_ID, String.class);
                     final Integer messageId = exchange.getMessage().getHeader(ApplicationConfiguration.REPLY_MESSAGE_ID, Integer.class);
                     queueService.appendVoiceToTextModel(new VoiceToTextModel(getUrl, chatId, messageId));
-                    exchange.getMessage().setBody(null);
                 })
-                .to("log:endd")
+                .stop()
+
         ;
     }
 }
