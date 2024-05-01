@@ -10,6 +10,6 @@ FROM openjdk:11-jdk-slim
 
 WORKDIR ./app
 
-COPY --from=builder ./builder/target/*.jar app.jar
+COPY --from=builder ./builder/target/* .
 
 CMD ["java", "-jar", "app.jar"]
