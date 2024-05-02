@@ -48,6 +48,9 @@ public class ApplicationConfiguration {
     @Value("${replicate.max-length}")
     private Integer voiceMaxLength;
 
+    @Value("${replicate.max-wait}")
+    private Long replicateMaxWait;
+
     @Value("${spring.security.user.password}")
     private String uiDefaultPassword;
 
@@ -99,6 +102,10 @@ public class ApplicationConfiguration {
 
     public Integer getVoiceMaxLength() {
         return voiceMaxLength;
+    }
+
+    public Long getReplicateMaxWait() {
+        return replicateMaxWait;
     }
 
     public String getReplicateUrl() {
