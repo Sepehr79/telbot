@@ -39,6 +39,10 @@ public class VoiceRouteBuilder extends AbstractRouteBuilder {
                     exchange.getMessage().setHeader(ApplicationConfiguration.REPLY_MESSAGE_ID, messageId);
                 })
                 .choice()
+                .when(exchange -> exchange.getMessage().getHeader(TelegramConstants.TELEGRAM_CHAT_ID, String.class).startsWith("-"))
+                .to("direct:ignore")
+                .end()
+                .choice()
                 .when(exchange ->
                         exchange.getMessage().getBody(AppIncomingReq.class)
                                 .getIncomingMessage()
