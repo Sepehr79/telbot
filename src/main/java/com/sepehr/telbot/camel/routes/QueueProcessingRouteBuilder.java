@@ -49,7 +49,7 @@ public class QueueProcessingRouteBuilder extends AbstractRouteBuilder {
                         incomingReq.setMessageId(voiceToTextModel.getMessageId());
                         exchange.getMessage().setBody(incomingReq);
                     } else if (queueService.peekVoiceToTextModel() != null &&
-                            queueService.peekVoiceToTextModel().getCreatedAt() - System.currentTimeMillis() >= applicationConfiguration.getVoiceMaxLength()) {
+                            System.currentTimeMillis() - queueService.peekVoiceToTextModel().getCreatedAt() >= applicationConfiguration.getReplicateMaxWait()) {
                         queueService.pollVoiceToTextModel();
                         exchange.getMessage().setHeader("voiceUnavailable", true);
                     }
