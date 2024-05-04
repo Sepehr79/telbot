@@ -58,7 +58,6 @@ public class ChatGptRouteBuilder extends AbstractRouteBuilder {
 
                     if (System.currentTimeMillis() - userProfile.getLastCall() >= applicationConfiguration.getChatPeriod()) {
                         userProfile.setLastCall(System.currentTimeMillis());
-                        userProfileRepository.save(userProfile);
                     } else {
                         exchange.getMessage().setHeader(ApplicationConfiguration.CHAT_PERIOD_PER, true);
                     }
@@ -83,7 +82,7 @@ public class ChatGptRouteBuilder extends AbstractRouteBuilder {
                     final Integer messageId = exchange.getMessage().getHeader(ApplicationConfiguration.BODY_MESSAGE, Integer.class);
                     final UserProfile userProfile = exchange.getMessage().getHeader(ApplicationConfiguration.USER_PROFILE, UserProfile.class);
                     userProfile.getGptReq().getMessages().add(gptRequestBuilder.createAssistantMessage(body));
-
+                    userProfileRepository.save(userProfile);
                     final OutgoingTextMessage outMessage = OutgoingTextMessage.builder()
                             .text(body)
                             .build();
