@@ -13,6 +13,8 @@ public class GptReq {
 
     private final String model;
 
+    private final float temperature;
+
     private final List<GptMessage> messages;
 
 }

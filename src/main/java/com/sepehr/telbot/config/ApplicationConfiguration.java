@@ -24,6 +24,9 @@ public class ApplicationConfiguration {
     @Value("${replicate.url}")
     private String replicateUrl;
 
+    @Value("${openai.model.temperature}")
+    private float temperature;
+
     @Value("${replicate.apikey}")
     private String replicateKey;
 
@@ -90,6 +93,10 @@ public class ApplicationConfiguration {
 
     public String getChatGptUrl() {
         return chatGptUrl;
+    }
+
+    public float getTemperature() {
+        return temperature;
     }
 
     public long getChatPeriod() {

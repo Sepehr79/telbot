@@ -1,5 +1,7 @@
 package com.sepehr.telbot.model;
 
+import com.sepehr.telbot.config.ApplicationConfiguration;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -7,7 +9,10 @@ import java.util.List;
 
 
 @Component
+@RequiredArgsConstructor
 public class GptRequestBuilder {
+
+    private final ApplicationConfiguration applicationConfiguration;
 
     public GptReq createGptReq() {
         List<GptMessage> gptMessages = new ArrayList<>();
@@ -16,7 +21,7 @@ public class GptRequestBuilder {
                 "your name is Telegram assistant and your talking as a Telegram bot." +
                 "remember that if it was necessary to use english word in your sentence, " +
                 "don't put the english word in beginning of the line"));
-        return new GptReq("gpt-3.5-turbo", gptMessages);
+        return new GptReq("gpt-3.5-turbo", applicationConfiguration.getTemperature(), gptMessages);
     }
 
     public GptMessage createAssistantMessage(final String content) {
