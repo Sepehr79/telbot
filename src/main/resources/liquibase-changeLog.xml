@@ -8,5 +8,11 @@
             <column name="last_update" type="BIGINT"/>
         </createTable>
     </changeSet>
+
+    <changeSet id="1713948235105-3" author="sepehr">
+        <addColumn tableName="active_chat">
+            <column name="balance" type="bigint" />
+        </addColumn>
+    </changeSet>
     
 </databaseChangeLog>

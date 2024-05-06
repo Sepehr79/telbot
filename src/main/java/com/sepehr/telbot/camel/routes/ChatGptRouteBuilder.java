@@ -3,9 +3,12 @@ package com.sepehr.telbot.camel.routes;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.sepehr.telbot.config.ApplicationConfiguration;
 import com.sepehr.telbot.model.AppIncomingReq;
+import com.sepehr.telbot.model.Command;
 import com.sepehr.telbot.model.GptMessage;
 import com.sepehr.telbot.model.GptRequestBuilder;
+import com.sepehr.telbot.model.entity.ActiveChat;
 import com.sepehr.telbot.model.entity.UserProfile;
+import com.sepehr.telbot.model.repo.ActiveChatRepository;
 import com.sepehr.telbot.model.repo.UserProfileRepository;
 import com.sepehr.telbot.service.RedisService;
 import io.vertx.core.http.HttpHeaders;
@@ -26,17 +29,21 @@ public class ChatGptRouteBuilder extends AbstractRouteBuilder {
 
     private final UserProfileRepository userProfileRepository;
 
+    private final ActiveChatRepository activeChatRepository;
+
     private final RedisService redisService;
 
 
     public ChatGptRouteBuilder(ApplicationConfiguration applicationConfiguration,
                                GptRequestBuilder gptRequestBuilder,
                                UserProfileRepository userProfileRepository,
-                               RedisService redisService) {
+                               RedisService redisService,
+                               ActiveChatRepository activeChatRepository) {
         super(applicationConfiguration);
         this.gptRequestBuilder = gptRequestBuilder;
         this.userProfileRepository = userProfileRepository;
         this.redisService = redisService;
+        this.activeChatRepository = activeChatRepository;
     }
 
     @Override
@@ -81,6 +88,7 @@ public class ChatGptRouteBuilder extends AbstractRouteBuilder {
                     final String body = bodyResult.get("choices").get(0).get("message").get("content").asText();
                     final Integer messageId = exchange.getMessage().getHeader(ApplicationConfiguration.BODY_MESSAGE, Integer.class);
                     final UserProfile userProfile = exchange.getMessage().getHeader(ApplicationConfiguration.USER_PROFILE, UserProfile.class);
+                    final ActiveChat activeChat = exchange.getMessage().getHeader(ApplicationConfiguration.ACTIVE_CHAT, ActiveChat.class);
                     userProfile.getGptReq().getMessages().add(gptRequestBuilder.createAssistantMessage(body));
                     userProfileRepository.save(userProfile);
                     final OutgoingTextMessage outMessage = OutgoingTextMessage.builder()
@@ -89,6 +97,8 @@ public class ChatGptRouteBuilder extends AbstractRouteBuilder {
                     outMessage.setReplyToMessageId(messageId.longValue());
                     outMessage.setParseMode("markdown");
 
+                    activeChat.setBalance(activeChat.getBalance() - Command.CHAT.getUsingBalance());
+                    activeChatRepository.save(activeChat);
                     exchange.getMessage().setBody(outMessage);
                 });
 

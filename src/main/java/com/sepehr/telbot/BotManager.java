@@ -2,6 +2,7 @@ package com.sepehr.telbot;
 
 import com.sepehr.telbot.camel.process.RouteSelectProcessor;
 import com.sepehr.telbot.camel.process.TelegramMessagePreProcessor;
+import com.sepehr.telbot.camel.process.UserBalanceProcessor;
 import com.sepehr.telbot.camel.process.command.GroupCommandProcessor;
 import com.sepehr.telbot.config.ApplicationConfiguration;
 import lombok.RequiredArgsConstructor;
@@ -25,6 +26,8 @@ public class BotManager extends RouteBuilder {
 
     private final RouteSelectProcessor routeSelectProcessor;
 
+    private final UserBalanceProcessor userBalanceProcessor;
+
     @Value("${app.version}")
     private String appVersion;
 
@@ -38,6 +41,7 @@ public class BotManager extends RouteBuilder {
                 .when(exchange -> exchange.getMessage().getHeader(TelegramConstants.TELEGRAM_CHAT_ID, String.class).startsWith("-"))
                     .process(groupCommandProcessor).id(GroupCommandProcessor.class.getSimpleName())
                 .end()
+                .process(userBalanceProcessor).id(UserBalanceProcessor.class.getSimpleName())
                 .toD("direct:${header.route}", true)
                 .to("log:telegramOut?showHeaders=true")
                 .to(applicationConfiguration.getTelegramUri());

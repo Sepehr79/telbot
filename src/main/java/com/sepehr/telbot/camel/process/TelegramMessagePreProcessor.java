@@ -1,7 +1,7 @@
 package com.sepehr.telbot.camel.process;
 
+import com.sepehr.telbot.config.ApplicationConfiguration;
 import com.sepehr.telbot.model.AppIncomingReq;
-import com.sepehr.telbot.model.Command;
 import com.sepehr.telbot.model.entity.ActiveChat;
 import com.sepehr.telbot.model.repo.ActiveChatRepository;
 import lombok.RequiredArgsConstructor;
@@ -20,6 +20,8 @@ import org.springframework.stereotype.Component;
 public class TelegramMessagePreProcessor implements Processor {
 
     private final ActiveChatRepository activeChatRepository;
+
+    private final ApplicationConfiguration applicationConfiguration;
 
     @Override
     public void process(Exchange exchange) {
@@ -45,6 +47,10 @@ public class TelegramMessagePreProcessor implements Processor {
         exchange.getMessage().setBody(telegramIncomingReq);
 
         final String chatId = exchange.getMessage().getHeader(TelegramConstants.TELEGRAM_CHAT_ID, String.class);
-        activeChatRepository.save(new ActiveChat(chatId, System.currentTimeMillis()));
+
+        ActiveChat activeChat = activeChatRepository.findById(chatId)
+                .orElse(new ActiveChat(chatId, System.currentTimeMillis(), applicationConfiguration.getDefaultBalance()));
+        activeChatRepository.save(activeChat);
+        exchange.getMessage().setHeader(ApplicationConfiguration.ACTIVE_CHAT, activeChat);
     }
 }

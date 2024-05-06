@@ -23,4 +23,9 @@ public class ApplicationSchedule {
         );
     }
 
+    @Scheduled(cron = "0 0 0 * * *", zone = "Asia/Tehran")
+    public void setFreeBalanceForAllUsers() {
+        activeChatRepository.setFreeBalance();
+    }
+
 }

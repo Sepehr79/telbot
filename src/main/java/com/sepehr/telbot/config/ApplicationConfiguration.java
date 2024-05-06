@@ -63,6 +63,9 @@ public class ApplicationConfiguration {
     @Value("${telegram.chat.period}")
     private long chatPeriod;
 
+    @Value("${telegram.user.balance}")
+    private long defaultBalance;
+
     public static String CHAT_PERIOD_PER = "chatPer";
 
     public static String REPLY_MESSAGE_ID = "MessageId";
@@ -80,6 +83,10 @@ public class ApplicationConfiguration {
     public static String FILE_ID = "fileId";
 
     public static String FILE_PATH = "filePath";
+
+    public static String BALANCE_MESSAGE = "balanceMessage";
+
+    public static String ACTIVE_CHAT = "activeChat";
 
     public static String PHOTO_PATH = "photoPath";
 
@@ -155,4 +162,7 @@ public class ApplicationConfiguration {
         return voiceToTextUrl;
     }
 
+    public long getDefaultBalance() {
+        return defaultBalance;
+    }
 }

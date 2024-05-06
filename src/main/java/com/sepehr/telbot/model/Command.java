@@ -7,12 +7,16 @@ import lombok.RequiredArgsConstructor;
 @Getter
 public enum Command {
 
-    START,
-    DONATE,
-    VERSION,
-    CHAT,
-    VOICE
+    START(0),
+    DONATE(0),
+    VERSION(0),
+    CHAT(1000),
+    VOICE(700),
+    BALANCE(0)
+
     ;
+
+    private final long usingBalance;
 
 
 }

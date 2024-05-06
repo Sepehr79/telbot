@@ -20,4 +20,6 @@ public class ActiveChat {
 
     private long lastUpdate;
 
+    private long balance;
+
 }
