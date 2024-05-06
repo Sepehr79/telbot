@@ -3,6 +3,7 @@ package com.sepehr.telbot.camel.process;
 import com.sepehr.telbot.config.ApplicationConfiguration;
 import com.sepehr.telbot.model.AppIncomingReq;
 import com.sepehr.telbot.model.entity.ActiveChat;
+import com.sepehr.telbot.model.entity.Model;
 import com.sepehr.telbot.model.repo.ActiveChatRepository;
 import lombok.RequiredArgsConstructor;
 import org.apache.camel.Exchange;
@@ -49,7 +50,7 @@ public class TelegramMessagePreProcessor implements Processor {
         final String chatId = exchange.getMessage().getHeader(TelegramConstants.TELEGRAM_CHAT_ID, String.class);
 
         ActiveChat activeChat = activeChatRepository.findById(chatId)
-                .orElse(new ActiveChat(chatId, System.currentTimeMillis(), applicationConfiguration.getDefaultBalance()));
+                .orElse(new ActiveChat(chatId, System.currentTimeMillis(), applicationConfiguration.getDefaultBalance(), Model.GPT35));
         activeChatRepository.save(activeChat);
         exchange.getMessage().setHeader(ApplicationConfiguration.ACTIVE_CHAT, activeChat);
     }

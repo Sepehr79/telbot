@@ -14,5 +14,11 @@
             <column name="balance" type="bigint" />
         </addColumn>
     </changeSet>
+
+    <changeSet id="1713948235111-4" author="sepehr">
+        <addColumn tableName="active_chat">
+            <column name="using_model" type="varchar(15)" />
+        </addColumn>
+    </changeSet>
     
 </databaseChangeLog>

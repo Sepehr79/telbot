@@ -7,6 +7,7 @@ import com.sepehr.telbot.model.Command;
 import com.sepehr.telbot.model.GptMessage;
 import com.sepehr.telbot.model.GptRequestBuilder;
 import com.sepehr.telbot.model.entity.ActiveChat;
+import com.sepehr.telbot.model.entity.Model;
 import com.sepehr.telbot.model.entity.UserProfile;
 import com.sepehr.telbot.model.repo.ActiveChatRepository;
 import com.sepehr.telbot.model.repo.UserProfileRepository;
@@ -96,9 +97,10 @@ public class ChatGptRouteBuilder extends AbstractRouteBuilder {
                             .build();
                     outMessage.setReplyToMessageId(messageId.longValue());
                     outMessage.setParseMode("markdown");
-
-                    activeChat.setBalance(activeChat.getBalance() - Command.CHAT.getUsingBalance());
-                    activeChatRepository.save(activeChat);
+                    if (activeChat.getUsingModel().equals(Model.GPT4)) {
+                        activeChat.setBalance(activeChat.getBalance() - Command.CHAT.getUsingBalance());
+                        activeChatRepository.save(activeChat);
+                    }
                     exchange.getMessage().setBody(outMessage);
                 });
 

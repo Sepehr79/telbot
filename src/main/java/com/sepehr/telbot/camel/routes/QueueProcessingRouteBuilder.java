@@ -6,6 +6,7 @@ import com.sepehr.telbot.model.AppIncomingReq;
 import com.sepehr.telbot.model.Command;
 import com.sepehr.telbot.model.VoiceToTextModel;
 import com.sepehr.telbot.model.entity.ActiveChat;
+import com.sepehr.telbot.model.entity.Model;
 import com.sepehr.telbot.model.repo.ActiveChatRepository;
 import com.sepehr.telbot.service.QueueService;
 import org.apache.camel.component.telegram.TelegramConstants;
@@ -57,8 +58,10 @@ public class QueueProcessingRouteBuilder extends AbstractRouteBuilder {
                         AppIncomingReq incomingReq = new AppIncomingReq();
                         incomingReq.setBody(text);
                         incomingReq.setMessageId(voiceToTextModel.getMessageId());
-                        activeChat.setBalance(activeChat.getBalance() - Command.VOICE.getUsingBalance());
-                        activeChatRepository.save(activeChat);
+                        if (activeChat.getUsingModel().equals(Model.GPT4)) {
+                            activeChat.setBalance(activeChat.getBalance() - Command.VOICE.getUsingBalance());
+                            activeChatRepository.save(activeChat);
+                        }
                         exchange.getMessage().setBody(incomingReq);
                     } else if (queueService.peekVoiceToTextModel() != null &&
                             System.currentTimeMillis() - queueService.peekVoiceToTextModel().getCreatedAt() >= applicationConfiguration.getReplicateMaxWait()) {
