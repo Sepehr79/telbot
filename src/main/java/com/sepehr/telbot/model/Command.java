@@ -8,6 +8,5 @@ public enum Command {
     CHAT,
     VOICE,
     BALANCE,
-    SETTINGS,
     ;
 }
