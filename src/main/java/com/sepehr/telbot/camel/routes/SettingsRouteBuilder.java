@@ -33,17 +33,30 @@ public class SettingsRouteBuilder extends AbstractRouteBuilder {
                     final String botSettingsText = "تنظیمات ربات\n\nدر این بخش شما میتوانید مدل انتخابی خود را مشخص کنید.";
                     AppIncomingReq body = exchange.getMessage().getBody(AppIncomingReq.class);
                     final ActiveChat activeChat = exchange.getMessage().getHeader(ApplicationConfiguration.ACTIVE_CHAT, ActiveChat.class);
+                    OutgoingMessage outgoingMessage;
                     if (body.getBody().equals("/settings/changeModel")) {
                         activeChat.setUsingModel(activeChat.getUsingModel().equals(Model.GPT35) ? Model.GPT4 : Model.GPT35);
                         activeChatRepository.save(activeChat);
+                        outgoingMessage = EditMessageTextMessage.builder()
+                                .text(botSettingsText)
+                                .replyMarkup(getInlineKeyboardMarkup(activeChat))
+                                .messageId(body.getMessageId())
+                                .build();
+                    } else {
+                        outgoingMessage = OutgoingTextMessage.builder()
+                                .text(botSettingsText)
+                                .replyMarkup(getInlineKeyboardMarkup(activeChat))
+                                .parseMode("markdown")
+                                .build();
                     }
-                    final InlineKeyboardMarkup replyKeyboardMarkup =
-                            InlineKeyboardMarkup.builder()
-                                    .addRow(List.of(InlineKeyboardButton.builder().text(String.format("مدل: %s", userProperties.getModel().get(activeChat.getUsingModel()).getName()))
-                                            .callbackData("/settings/changeModel").build()))
-                                    .build();
-                    OutgoingMessage botSettings = getOutGoingTextMessageBuilder(exchange, botSettingsText, replyKeyboardMarkup);
-                    exchange.getMessage().setBody(botSettings);
+                    exchange.getMessage().setBody(outgoingMessage);
                 });
+    }
+
+    private InlineKeyboardMarkup getInlineKeyboardMarkup(ActiveChat activeChat) {
+        return InlineKeyboardMarkup.builder()
+                        .addRow(List.of(InlineKeyboardButton.builder().text(String.format("مدل: %s", userProperties.getModel().get(activeChat.getUsingModel()).getName()))
+                                .callbackData("/settings/changeModel").build()))
+                        .build();
     }
 }
