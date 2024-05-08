@@ -9,7 +9,6 @@ import com.sepehr.telbot.model.repo.ActiveChatRepository;
 import org.apache.camel.component.telegram.model.InlineKeyboardButton;
 import org.apache.camel.component.telegram.model.InlineKeyboardMarkup;
 import org.apache.camel.component.telegram.model.OutgoingMessage;
-import org.apache.camel.component.telegram.model.OutgoingTextMessage;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -46,6 +45,7 @@ public class MenuRouteBuilder extends AbstractRouteBuilder {
                     final InlineKeyboardMarkup replyKeyboardMarkup =
                             InlineKeyboardMarkup.builder()
                                     .addRow(List.of(InlineKeyboardButton.builder().text(String.format("مدل: %s", userProperties.getModel().get(activeChat.getUsingModel()).getName())).callbackData("/start/changeModel").build()))
+                                    .addRow(List.of(InlineKeyboardButton.builder().text("حساب من | خرید اشتراک GPT-4").callbackData("/balance").build()))
                                     .addRow(List.of(InlineKeyboardButton.builder().text("حمایت از ما").callbackData("/donate").build()))
                                     .build();
                     final OutgoingMessage outgoingMessage = getOutGoingTextMessageBuilder(

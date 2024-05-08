@@ -24,8 +24,6 @@ public class UserBalanceProcessor implements Processor {
                     userProperties.getModel().get(activeChat.getUsingModel()).getChatCost() + userProperties.getModel().get(activeChat.getUsingModel()).getVoiceCost();
             if (activeChat.getBalance() - usingBalance < 0) {
                 route = Command.BALANCE.toString().toLowerCase();
-                final String body = "موجودی شما ناکافی است. لطفا حساب خود را شارژ کنید.";
-                exchange.getMessage().setHeader(ApplicationConfiguration.BALANCE_MESSAGE, body);
                 exchange.getMessage().setHeader(ApplicationConfiguration.ROUTE_SELECT, route);
             }
         }
