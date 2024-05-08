@@ -69,4 +69,9 @@ public class WebController {
         return "monitor";
     }
 
+    @GetMapping("/home")
+    public String homePage() {
+        return "home";
+    }
+
 }
