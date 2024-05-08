@@ -60,9 +60,6 @@ public class ApplicationConfiguration {
     @Value("${spring.redis.messages.ttl}")
     private int messagesTtl;
 
-    @Value("${telegram.chat.period}")
-    private long chatPeriod;
-
     @Value("${telegram.user.balance}")
     private long defaultBalance;
 
@@ -104,10 +101,6 @@ public class ApplicationConfiguration {
 
     public float getTemperature() {
         return temperature;
-    }
-
-    public long getChatPeriod() {
-        return chatPeriod;
     }
 
     public String getOpenaiKey() {

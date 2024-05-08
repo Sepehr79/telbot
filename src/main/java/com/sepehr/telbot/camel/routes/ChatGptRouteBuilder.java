@@ -2,6 +2,7 @@ package com.sepehr.telbot.camel.routes;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.sepehr.telbot.config.ApplicationConfiguration;
+import com.sepehr.telbot.config.UserProperties;
 import com.sepehr.telbot.model.AppIncomingReq;
 import com.sepehr.telbot.model.Command;
 import com.sepehr.telbot.model.GptMessage;
@@ -34,17 +35,21 @@ public class ChatGptRouteBuilder extends AbstractRouteBuilder {
 
     private final RedisService redisService;
 
+    private final UserProperties userProperties;
+
 
     public ChatGptRouteBuilder(ApplicationConfiguration applicationConfiguration,
                                GptRequestBuilder gptRequestBuilder,
                                UserProfileRepository userProfileRepository,
                                RedisService redisService,
-                               ActiveChatRepository activeChatRepository) {
+                               ActiveChatRepository activeChatRepository,
+                               UserProperties userProperties) {
         super(applicationConfiguration);
         this.gptRequestBuilder = gptRequestBuilder;
         this.userProfileRepository = userProfileRepository;
         this.redisService = redisService;
         this.activeChatRepository = activeChatRepository;
+        this.userProperties = userProperties;
     }
 
     @Override
@@ -55,16 +60,17 @@ public class ChatGptRouteBuilder extends AbstractRouteBuilder {
                 .to("seda:typingAction")
                 .process(exchange -> {
                     final var body = exchange.getMessage().getBody(AppIncomingReq.class);
+                    final ActiveChat activeChat = exchange.getMessage().getHeader(ApplicationConfiguration.ACTIVE_CHAT, ActiveChat.class);
                     final String chatId = exchange.getMessage().getHeader(TelegramConstants.TELEGRAM_CHAT_ID, String.class);
                     final UserProfile userProfile = userProfileRepository.findById(chatId).orElseGet(() ->
                             UserProfile.builder().id(chatId)
-                                    .gptReq(gptRequestBuilder.createGptReq())
+                                    .gptReq(gptRequestBuilder.createGptReq(activeChat.getUsingModel()))
                                     .lastCall(0)
                                     .build());
                     final GptMessage gptMessage = gptRequestBuilder.createUserMessage(body.getBody());
                     redisService.pushMessage(body.getBody());
 
-                    if (System.currentTimeMillis() - userProfile.getLastCall() >= applicationConfiguration.getChatPeriod()) {
+                    if (System.currentTimeMillis() - userProfile.getLastCall() >= userProperties.getModel().get(activeChat.getUsingModel()).getPeriod()) {
                         userProfile.setLastCall(System.currentTimeMillis());
                     } else {
                         exchange.getMessage().setHeader(ApplicationConfiguration.CHAT_PERIOD_PER, true);
@@ -75,7 +81,10 @@ public class ChatGptRouteBuilder extends AbstractRouteBuilder {
                     exchange.getMessage().setHeader(ApplicationConfiguration.USER_PROFILE, userProfile);
                     exchange.getMessage().setBody(userProfile.getGptReq());
                 })
-                .choice().when(exchange -> exchange.getMessage().getHeaders().containsKey(ApplicationConfiguration.CHAT_PERIOD_PER)).to("direct:per").end()
+                .choice()
+                .when(exchange -> exchange.getMessage().getHeaders().containsKey(ApplicationConfiguration.CHAT_PERIOD_PER))
+                    .to("direct:per")
+                .end()
                 .setHeader(Exchange.CONTENT_TYPE, constant("application/json"))
                 .setHeader(VertxHttpConstants.HTTP_METHOD, constant("POST"))
                 .setHeader("Authorization", constant(applicationConfiguration.getOpenaiKey()))
@@ -97,10 +106,8 @@ public class ChatGptRouteBuilder extends AbstractRouteBuilder {
                             .build();
                     outMessage.setReplyToMessageId(messageId.longValue());
                     outMessage.setParseMode("markdown");
-                    if (activeChat.getUsingModel().equals(Model.GPT4)) {
-                        activeChat.setBalance(activeChat.getBalance() - Command.CHAT.getUsingBalance());
-                        activeChatRepository.save(activeChat);
-                    }
+                    activeChat.setBalance(activeChat.getBalance() - userProperties.getModel().get(activeChat.getUsingModel()).getChatCost());
+                    activeChatRepository.save(activeChat);
                     exchange.getMessage().setBody(outMessage);
                 });
 
@@ -120,9 +127,10 @@ public class ChatGptRouteBuilder extends AbstractRouteBuilder {
 
         from("direct:per")
                 .process(exchange -> {
-                    final long lastCall      = exchange.getMessage().getHeader(ApplicationConfiguration.USER_PROFILE, UserProfile.class).getLastCall();
-                    final long period        = applicationConfiguration.getChatPeriod();
-                    final long remainingTime = period - (System.currentTimeMillis() - lastCall);
+                    final long lastCall         = exchange.getMessage().getHeader(ApplicationConfiguration.USER_PROFILE, UserProfile.class).getLastCall();
+                    final ActiveChat activeChat = exchange.getMessage().getHeader(ApplicationConfiguration.ACTIVE_CHAT, ActiveChat.class);
+                    final long period           = userProperties.getModel().get(activeChat.getUsingModel()).getPeriod();
+                    final long remainingTime    = period - (System.currentTimeMillis() - lastCall);
                     exchange.getMessage().setBody(
                             String.format("شما هر %d ثانیه مجاز به ارسال یک پیام هستید." +
                                     "لطفا %d ثانیه دیگر امتحان کنید.",

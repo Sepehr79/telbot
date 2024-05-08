@@ -40,7 +40,7 @@ public class VoiceRouteBuilder extends AbstractRouteBuilder {
                 })
                 .choice()
                 .when(exchange -> exchange.getMessage().getHeader(TelegramConstants.TELEGRAM_CHAT_ID, String.class).startsWith("-"))
-                .to("direct:ignore")
+                    .to("direct:ignore")
                 .end()
                 .choice()
                 .when(exchange ->
@@ -48,18 +48,18 @@ public class VoiceRouteBuilder extends AbstractRouteBuilder {
                                 .getIncomingMessage()
                                 .getAudio().getDurationSeconds()
                                 <= applicationConfiguration.getVoiceMaxLength())
-                .to("direct:sendVoice")
+                    .to("direct:sendVoice")
                 .stop()
                 .otherwise()
-                .to("log:longVoice?showHeaders=true")
-                .process(exchange -> {
-                    final Integer messageId = exchange.getMessage().getHeader(ApplicationConfiguration.REPLY_MESSAGE_ID, Integer.class);
-                    OutgoingTextMessage outgoingTextMessage = new OutgoingTextMessage();
-                    outgoingTextMessage.setReplyToMessageId(Long.valueOf(messageId));
-                    outgoingTextMessage.setText(String.format("لطفا توجه داشته باشید که پیام صوتی شما " +
-                            "باید حداکثر %d ثانیه باشد.", applicationConfiguration.getVoiceMaxLength()));
-                    exchange.getMessage().setBody(outgoingTextMessage);
-                });
+                    .to("log:longVoice?showHeaders=true")
+                    .process(exchange -> {
+                        final Integer messageId = exchange.getMessage().getHeader(ApplicationConfiguration.REPLY_MESSAGE_ID, Integer.class);
+                        OutgoingTextMessage outgoingTextMessage = new OutgoingTextMessage();
+                        outgoingTextMessage.setReplyToMessageId(Long.valueOf(messageId));
+                        outgoingTextMessage.setText(String.format("لطفا توجه داشته باشید که پیام صوتی شما " +
+                                "باید حداکثر %d ثانیه باشد.", applicationConfiguration.getVoiceMaxLength()));
+                        exchange.getMessage().setBody(outgoingTextMessage);
+                    });
 
         from("direct:sendVoice")
                 .removeHeader(ApplicationConfiguration.BODY_MESSAGE) // Necessary to prevent IllegalArgumentException
