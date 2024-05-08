@@ -24,6 +24,7 @@ public class MenuRouteBuilder extends AbstractRouteBuilder {
                     final InlineKeyboardMarkup replyKeyboardMarkup =
                             InlineKeyboardMarkup.builder()
                                     .addRow(List.of(InlineKeyboardButton.builder().text("حمایت از ما").callbackData("/donate").build()))
+                                    .addRow(List.of(InlineKeyboardButton.builder().text("تنظیمات").callbackData("/settings").build()))
                                     .build();
                     final OutgoingTextMessage outgoingMessage = (OutgoingTextMessage) getOutGoingTextMessageBuilder(exchange, "سلام! این ربات بهت کمک میکنه که از طریق تلگرام با ChatGPT صحبت کنی.\n\n" +
                             "در حال حاضر برای پاسخ به شما از مدل gpt-3.5-turbo استفاده میشه که میتونین مستقیم از طریق:\n https://chat.openai.com\n بهش دسترسی پیدا کنید.\n\n" +

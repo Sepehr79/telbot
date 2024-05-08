@@ -7,6 +7,7 @@ public enum Command {
     VERSION,
     CHAT,
     VOICE,
-    BALANCE
+    BALANCE,
+    SETTINGS,
     ;
 }

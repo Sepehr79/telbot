@@ -55,6 +55,7 @@ public abstract class AbstractRouteBuilder extends RouteBuilder {
         return OutgoingTextMessage.builder()
                 .text(text)
                 .replyMarkup(replyMarkup)
+                .parseMode("markdown")
                 .build();
     }
 
