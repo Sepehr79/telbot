@@ -60,8 +60,8 @@ public class ApplicationConfiguration {
     @Value("${spring.redis.messages.ttl}")
     private int messagesTtl;
 
-    @Value("${telegram.chat.period}")
-    private long chatPeriod;
+    @Value("${telegram.user.balance}")
+    private long defaultBalance;
 
     public static String CHAT_PERIOD_PER = "chatPer";
 
@@ -81,6 +81,10 @@ public class ApplicationConfiguration {
 
     public static String FILE_PATH = "filePath";
 
+    public static String BALANCE_MESSAGE = "balanceMessage";
+
+    public static String ACTIVE_CHAT = "activeChat";
+
     public static String PHOTO_PATH = "photoPath";
 
     public String getAdminChatId() {
@@ -97,10 +101,6 @@ public class ApplicationConfiguration {
 
     public float getTemperature() {
         return temperature;
-    }
-
-    public long getChatPeriod() {
-        return chatPeriod;
     }
 
     public String getOpenaiKey() {
@@ -155,4 +155,7 @@ public class ApplicationConfiguration {
         return voiceToTextUrl;
     }
 
+    public long getDefaultBalance() {
+        return defaultBalance;
+    }
 }

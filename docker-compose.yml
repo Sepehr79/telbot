@@ -9,9 +9,15 @@ services:
   telbot:
 #    image: sepehr79m/telbot
     build: .
+    ports:
+      - "8080:8080"
     environment:
       SPRING_REDIS_HOST: redis
+      openai_model_temperature: 0.2
+    volumes:
+      - users_data:./data
 
 volumes:
   redis_data:
     external: false
+  users_data:
